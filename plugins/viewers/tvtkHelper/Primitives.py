@@ -79,6 +79,10 @@ class Primitive(HasExpressionTraits):
 
   def add_to_scene(self,sc):
        sc.add_actors(self.actor)
+       self.scene=sc
+       
+  def remove_from_scene(self):
+       self.scene.remove_actors(self.actor)
 
   def setall(self,attr,value):
        setattr(self,attr,value)
@@ -428,7 +432,12 @@ class PrimitiveCollection(HasTraits):
        map(lambda x: x.update(),self.primitives)
       
   def add_to_scene(self,sc):
+       self.scene=sc
        map(lambda x: x.add_to_scene(sc),self.primitives)
+       
+  def remove_from_scene(self):
+       map(lambda x: x.remove_from_scene(),self.primitives)
+       self.primitives=[]
        
   def setall(self,attr,value):
        map(lambda x: setattr(x,attr,value),self.primitives)
