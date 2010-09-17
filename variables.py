@@ -1,5 +1,6 @@
 from enthought.traits.api import HasTraits, Int, Float, Dict, List, Property, Enum, Color, Instance, Str, Any, on_trait_change, Event, Button, TraitType, DelegatesTo
 from enthought.traits.ui.api import View, Item, ValueEditor, TabularEditor, HSplit, TextEditor
+from enthought.traits.trait_base import Undefined
 from enthought.traits.ui.tabular_adapter import TabularAdapter
 import time
 
@@ -191,7 +192,10 @@ class Expression(HasTraits):
 
   def get_curr_value(self):
     return self._vars._eval_expr(self._expr)
-
+    
+  def get_historic_value(self,lag):
+    return self._vars._eval_expr(self._expr)
+    
   def get_array(self, first=0, last=None):
     first, last = self._vars.bound_array(first, last)
     
@@ -230,6 +234,7 @@ class ExpressionTraitListener(HasTraits):
 		setattr(self,'_' +  name + '_changed',self.changed)
 	def _width_changed(self):
 		print "howdy\n\n"
+
 		
 class TExpressionTrait(TraitType):
 	def validate(self,object,name,value):
@@ -255,6 +260,7 @@ class TExpressionTraitDelegatesTo(TraitType):
 		return TextEditor()
 			
 class HasExpressionTraits(HasTraits):
+	lag=Int(0)
 	global TExpression
 	def update(self):
 		if not(hasattr(self,'_expressionDict')):
@@ -317,12 +323,15 @@ class HasExpressionTraits(HasTraits):
 	
 	def updateExpressionTraitAll(self,name,handler):
 		input = getattr(self,name)
-		#print name + " input: ", input
+		print name + " input: ", input
 		#if self._expressionDict[name].has_key('Ecache'):
-		#	if self._expressionDict[name]['Ecache']!=getattr(self,'E_'+name):
+		#	if not(self._expressionDict[name]['Ecache'] != getattr(self,'E_'+name)):
+		#		print "Forcing a refresh"
 		#		self._expressionDict[name]['Ecache']=getattr(self,'E_'+name)
-		#		del self._expressionDict[name]['expression']
+		#		if self._expressionDict[name].has_key('expression'):
+		#			del self._expressionDict[name]['expression']
 		#		setattr(self,name,getattr(self,'E_'+name))
+		#		print "attr " + name + " set to", getattr(self,'E_'+name)
 		#		return
 		flag=False
 		if isinstance(input,str) or isinstance(input,unicode):
@@ -339,12 +348,23 @@ class HasExpressionTraits(HasTraits):
 			output=input
 		
 		if flag:
-			output=self._expressionDict[name]['expression'].get_curr_value()
+			setattr(self,'Ex_'+name,self._expressionDict[name]['expression'])
+			output=self._expressionDict[name]['expression'].get_historic_value(self.lag)
 			
-		#self._expressionDict[name]['cache']=output
-		#print "output: ", output
-		if not(output==None):
-			setattr(self,'E_'+name,output)
+
+
+		if not(output is None or output is Undefined):
+			try:
+				setattr(self,'E_'+name,output)
+				#self._expressionDict[name]['Ecache']=output
+				print "Set output to ", output
+			except Exception as e:
+				print e
+		
+		#if output is None or output == output==Undefined:
+		#	print "hy"
+		#	setattr(self,name,handler.default_value)
+		#	setattr(self,'E_'+name,handler.default_value)
 			
 	def changed(self,name,value):
 		pass

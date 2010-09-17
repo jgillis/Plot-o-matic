@@ -28,7 +28,7 @@ class Primitive(HasExpressionTraits):
   tm = tvtk.Matrix4x4
   variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
-  
+  lag=Int(0)
   
   #This should also add delegated trait objects.
   def handle_arguments(self,*args,**kwargs): 
@@ -65,10 +65,10 @@ class Primitive(HasExpressionTraits):
     
   def update(self):
       if self.T:
-        if self.T.get_curr_value() !=None :
+        if self.T.get_historic_value(self.lag) !=None :
           p = self.parent.evalT()
           if p!=None:
-            self.tm.deep_copy(array(p*self.T.get_curr_value()).ravel())
+            self.tm.deep_copy(array(p*self.T.get_historic_value(self.lag)).ravel())
             self.actor.poke_matrix(self.tm)
       else:
         p=self.parent.evalT()
@@ -80,6 +80,8 @@ class Primitive(HasExpressionTraits):
   def add_to_scene(self,sc):
        sc.add_actors(self.actor)
 
+  def setall(self,attr,value):
+       setattr(self,attr,value)
        
 class Cone(Primitive):
   source = Instance(tvtk.ConeSource)
@@ -303,7 +305,7 @@ class PolyLine(Primitive):
     self.source.lines=lines
 
 class Circle(PolyLine):
-   radius=Instance(Expression)
+   radius=TExpression(Float)
    resolution=Int(100)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
@@ -427,4 +429,28 @@ class PrimitiveCollection(HasTraits):
       
   def add_to_scene(self,sc):
        map(lambda x: x.add_to_scene(sc),self.primitives)
+       
+  def setall(self,attr,value):
+       map(lambda x: setattr(x,attr,value),self.primitives)
 
+
+class Strobe(PrimitiveCollection):
+	length=Int(10)
+	step=Int(1)
+	def __init__(self,template):
+		self.template=template
+	
+	def _length_changed(self):
+		self.setup()
+		
+	def _step_changed(self):
+		self.setup()
+		
+	def setup(self):
+		pass
+	
+	
+def Lag(shape,lag):
+	shape.setall('lag',lag)
+		
+	

@@ -1,4 +1,4 @@
-from variables import Expression, Variables
+from variables import Expression, Variables, HasExpressionTraits
 
 from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, DelegatesTo, Any, on_trait_change, Float, Range
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
@@ -14,6 +14,7 @@ class Frame(HasTraits):
   T = Instance(Expression)
   name= Str("")
   variables = DelegatesTo('parent')
+  world=DelegatesTo('parent')
   
   traits_view = View(
     Item(name = 'name'),
@@ -21,10 +22,10 @@ class Frame(HasTraits):
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     title = 'Frame properties'
   )
-
-  def evalT(self):
-    if self.T.get_curr_value()!=None and self.parent.evalT()!=None:
-      return self.parent.evalT()*self.T.get_curr_value()
+  
+  def evalT(self,lag=0):
+    if self.T.get_historic_value(lag)!=None and self.parent.evalT(lag)!=None:
+      return self.parent.evalT(lag)*self.T.get_historic_value(lag)
     else:
       return None
 
@@ -46,6 +47,7 @@ class WorldFrame(Frame):
   def __init__(self,variables):
     self.variables=variables
     self.name="WorldFrame"
+    self.world=self
     #self.parent=None
     #self.T=T
 
