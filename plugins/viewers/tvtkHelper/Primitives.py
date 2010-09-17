@@ -245,6 +245,8 @@ class Line(Primitive):
     
 class ProjectionLine(Line):
   point=TExpression(Either(List,Tuple))
+  point1=None
+  point2=None
   traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
