@@ -41,6 +41,7 @@ class WorldFrame(Frame):
   #Nothing to be seen here
   e=eye(4)
   variables = Instance(Variables)
+  world=This
   def evalT(self):
     return self.e
 
