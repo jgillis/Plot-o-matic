@@ -446,6 +446,15 @@ class PrimitiveCollection(HasTraits):
 class Strobe(PrimitiveCollection):
 	length=Int(10)
 	step=Int(1)
+	template=Either(Primitive,PrimitiveCollection)
+	
+	traits_view = View(
+	    Item(name = 'length'),
+	    Item(name = 'step'),
+	    Item(name = 'template', editor=InstanceEditor(),style='custom'),
+	    title = 'Strobe properties'
+	   )
+	   
 	def __init__(self,template):
 		self.template=template
 	
@@ -456,10 +465,16 @@ class Strobe(PrimitiveCollection):
 		self.setup()
 		
 	def setup(self):
-		pass
-	
+		if hasattr(self,'scene'):
+			self.remove_from_scene()
+			for lag in range(0,length*step,step):
+				cl=Lag(self.template,lag)
+				self.add(cl)
+			self.add_to_scene(self.scene)
 	
 def Lag(shape,lag):
-	shape.setall('lag',lag)
+	cl=shape.clone_traits()
+	cl.setall('lag',lag)
+	return cl
 		
 	
