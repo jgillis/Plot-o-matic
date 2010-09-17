@@ -316,11 +316,10 @@ class Circle(PolyLine):
    def __init__(self,*args,**kwargs):
      PolyLine.__init__(self,*args,**kwargs)
      
-   def update(self):
+   def _E_radius_changed(self):
      t=linspace(0,6.29,self.resolution)
-     if self.radius.get_curr_value() !=None :
-     	self.points = array([self.radius.get_curr_value()*sin(t),self.radius.get_curr_value()*cos(t),zeros(t.shape)]).T
-     	super(Circle, self).update()
+     if not(self.E_radius is Undefined) :
+     	self.points = array([self.E_radius*sin(t),self.E_radius*cos(t),zeros(t.shape)]).T
     
 class Trace(PolyLine):
    point=TExpression(NumpyArray)
