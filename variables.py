@@ -239,6 +239,9 @@ class TExpressionTrait(TraitType):
 		self.mytrait=mytrait
 		TraitType.__init__(self)
 	
+	def get_editor(self,object):
+		return TextEditor()
+	
 class TExpressionTraitDelegatesTo(TraitType):
 	def __init__(self,delegate,prefix):
 		self.delegate=delegate
@@ -247,6 +250,9 @@ class TExpressionTraitDelegatesTo(TraitType):
 
 	def validate(self,object,name,value):
 		return value
+		
+	def get_editor(self,object):
+		return TextEditor()
 			
 class HasExpressionTraits(HasTraits):
 	global TExpression

@@ -74,7 +74,10 @@ class Primitive(HasExpressionTraits):
           self.actor.poke_matrix(self.tm)
       HasExpressionTraits.update(self)
 
+  def add_to_scene(self,sc):
+       sc.add_actors(self.actor)
 
+       
 class Cone(Primitive):
   source = Instance(tvtk.ConeSource)
   height= DelegatesTo('source')
@@ -357,10 +360,18 @@ class Image(Primitive):
 # LineSource, PlaneSource
 
 class PrimitiveCollection(HasTraits):
-  primitives=List(Primitive)
+  #primitives=List(Either(Primitive,This))
+  primitives=List(Instance(HasTraits))
   T=Instance(Expression)
   frame=Instance(Frame)
   
+  traits_view = View(
+    Item(name = 'parent', label='Frame'),
+    Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
+    Item(name = 'primitives', editor=ListEditor(),style='custom'),
+    title = 'Collection properties'
+   )
+   
   def getPrimitives(self):
     return self.primitives
     
@@ -376,7 +387,12 @@ class PrimitiveCollection(HasTraits):
     if isinstance(arg,Primitive):
       self.primitives.append(arg)
     if isinstance(arg,PrimitiveCollection):
-      self.add(arg.getPrimitives()) 
+      #self.add(arg.getPrimitives()) 
+      self.primitives.append(arg)
+
+  def update(self):
+       map(lambda x: x.update(),self.primitives)
       
-      
+  def add_to_scene(self,sc):
+       map(lambda x: x.add_to_scene(sc),self.primitives)
 

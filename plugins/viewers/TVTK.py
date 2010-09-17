@@ -17,7 +17,7 @@ from plugins.viewers.tvtkHelper.Primitives import *
 
 class TVTKViewer(Viewer):
   name = Str('TVTK Viewer')
-  primitives = List(Primitive)
+  primitives = List(Either(Primitive,PrimitiveCollection))
   scene = Instance(SceneModel, ())
   
   view = View(
@@ -42,10 +42,10 @@ class TVTKViewer(Viewer):
 
   def start(self):
     self.primitives=self.config.getPrimitives()
-    for prim in self.primitives:
-    	self.scene.add_actors(prim.actor)
-    pass
-
+    print "length:", len(self.primitives)
+    map(lambda x: x.add_to_scene(self.scene),self.primitives)
+    print "length:", len(self.primitives)
+    
   def stop(self):
     pass
 
