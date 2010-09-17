@@ -21,7 +21,7 @@ class NumpyArray(TraitType):
 
 class Primitive(HasExpressionTraits):
   parent=Instance(Frame)
-  T = Instance(Expression)
+  T = TExpression(numpy.ndarray)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   #actor = Instance(tvtk.Actor)
@@ -39,11 +39,6 @@ class Primitive(HasExpressionTraits):
     for k,v in kwargs.items():
       if k == 'frame':
         self.parent=v
-      elif k == 'T':
-         if isinstance(v,Expression):
-           self.T=v
-         else:
-           self.T=self.parent.variables.new_expression(v)
       elif len(self.trait_get(k))>0:
          #self.trait_set({k:v})
          self.__setattr__(k,v)
@@ -64,18 +59,19 @@ class Primitive(HasExpressionTraits):
     pass
     
   def update(self):
-      if self.T:
-        if self.T.get_historic_value(self.lag) !=None :
-          p = self.parent.evalT()
+      HasExpressionTraits.update(self)
+      if hasattr(self,'T'):
+        if self.E_T !=None :
+          p = self.parent.evalT(self.lag)
           if p!=None:
-            self.tm.deep_copy(array(p*self.T.get_historic_value(self.lag)).ravel())
+            self.tm.deep_copy(array(p*self.E_T).ravel())
             self.actor.poke_matrix(self.tm)
       else:
-        p=self.parent.evalT()
+        p=self.parent.evalT(self.lag)
         if p!=None:
           self.tm.deep_copy(array(p).ravel())
           self.actor.poke_matrix(self.tm)
-      HasExpressionTraits.update(self)
+      
 
   def add_to_scene(self,sc):
        sc.add_actors(self.actor)

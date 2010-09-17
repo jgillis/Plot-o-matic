@@ -42,7 +42,7 @@ class WorldFrame(Frame):
   e=eye(4)
   variables = Instance(Variables)
   world=This
-  def evalT(self):
+  def evalT(self,lag=0):
     return self.e
 
   def __init__(self,variables):
