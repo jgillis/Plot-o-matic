@@ -1,6 +1,6 @@
 from variables import Expression, Variables, HasExpressionTraits, TExpression
 
-from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined
+from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined, TraitType
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
   HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
 
@@ -13,6 +13,9 @@ from numpy import array, ndarray, linspace, zeros
 
 import numpy as np
 
+class NumpyArray(TraitType):
+	def validate(self,object,name,value):
+		return array(value)
 
 #note: to change color, pull slider all the way accross the range
 
@@ -320,29 +323,27 @@ class Circle(PolyLine):
      	super(Circle, self).update()
     
 class Trace(PolyLine):
-   x  = Instance(Expression)
-   y  = Instance(Expression)
-   z  = Instance(Expression)
+   point=TExpression(NumpyArray)
    length = Int(0)
    
    traits_view = View(
     Item(name = 'length', label='Frame'),
-    Item(name = 'x', style = 'custom'),
-    Item(name = 'y', style = 'custom'),
-    Item(name = 'z', style = 'custom'),
+    Item(name = 'point', style = 'custom'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
    )
    def __init__(self,*args,**kwargs):
      PolyLine.__init__(self,*args,**kwargs)
      
-   def update(self):
-     x=self.x.get_array(first=-self.length)
-     y=self.y.get_array(first=-self.length)
-     z=self.z.get_array(first=-self.length)
-     #self.points = array([x,y,z]).T
-     #print self.point.get_array(first=-self.length).shape
-     super(Trace, self).update()
+   def _E_point_changed(self,new):
+     if hasattr(self,'Ex_point'):
+       expression=self.Ex_point
+       #fix this
+       #history=expression.get_array(first=-3*self.length)
+       #print history, history.shape
+       #print history.reshape((3,history.shape[0]/3))
+
+
      
 
 class Text(Primitive):
