@@ -1,3 +1,5 @@
+from variables import Expression, Variables, HasExpressionTraits, TExpression
+
 from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
   HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
@@ -14,13 +16,14 @@ import numpy as np
 
 #note: to change color, pull slider all the way accross the range
 
-class Primitive(HasTraits):
+class Primitive(HasExpressionTraits):
   parent=Instance(Frame)
   T = Instance(Expression)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   #actor = Instance(tvtk.Actor)
   tm = tvtk.Matrix4x4
+  variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
   
   
@@ -69,7 +72,7 @@ class Primitive(HasTraits):
         if p!=None:
           self.tm.deep_copy(array(p).ravel())
           self.actor.poke_matrix(self.tm)
-          
+      HasExpressionTraits.update(self)
 
 
 class Cone(Primitive):
@@ -96,9 +99,9 @@ class Cone(Primitive):
     
 class Box(Primitive):
   source = Instance(tvtk.CubeSource)
-  x_length=DelegatesTo('source')
-  y_length=DelegatesTo('source')
-  z_length=DelegatesTo('source')
+  x_length=TExpression(DelegatesTo('source'))
+  y_length=TExpression(DelegatesTo('source'))
+  z_length=TExpression(DelegatesTo('source'))
 
   traits_view = View(
     Item(name = 'parent', label='Frame'),

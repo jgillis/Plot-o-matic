@@ -1,4 +1,4 @@
-from enthought.traits.api import HasTraits, Int, Float, Dict, List, Property, Enum, Color, Instance, Str, Any, on_trait_change, Event, Button
+from enthought.traits.api import HasTraits, Int, Float, Dict, List, Property, Enum, Color, Instance, Str, Any, on_trait_change, Event, Button, TraitType, DelegatesTo
 from enthought.traits.ui.api import View, Item, ValueEditor, TabularEditor, HSplit, TextEditor
 from enthought.traits.ui.tabular_adapter import TabularAdapter
 import time
@@ -201,3 +201,150 @@ class Expression(HasTraits):
       self._data_array_cache_index = last
 
     return self._data_array_cache[first:last]
+
+		
+def TExpression(mytrait):
+	if isinstance(mytrait,DelegatesTo):
+		#print "interesting"
+		return TExpressionTraitDelegatesTo(mytrait.delegate,mytrait.prefix)
+		#print " or not"
+	else:
+		return TExpressionTrait(mytrait)
+
+	
+class ExpressionTraitListener(HasTraits):
+	def Echanged(self, new):
+		print self.name + "=" , new
+		setattr(self,self.name,new)
+		
+	def changed(self, new):
+		print self.name + "=" ,  new
+		self.object.changed(self.name,new)
+		
+	def __init__(self,object,name):
+		self.name = name
+		self.object=object
+		setattr(self,'_E_' + name + '_changed',self.Echanged)
+		print "registering " +'_E_' + name + '_changed'
+		print "registering " +'_' + name + '_changed'
+		setattr(self,'_' +  name + '_changed',self.changed)
+	def _width_changed(self):
+		print "howdy\n\n"
+		
+class TExpressionTrait(TraitType):
+	def validate(self,object,name,value):
+		return value
+		
+	def __init__(self,mytrait):
+		self.mytrait=mytrait
+		TraitType.__init__(self)
+	
+class TExpressionTraitDelegatesTo(TraitType):
+	def __init__(self,delegate,prefix):
+		self.delegate=delegate
+		self.prefix=prefix
+		TraitType.__init__(self)
+
+	def validate(self,object,name,value):
+		return value
+			
+class HasExpressionTraits(HasTraits):
+	global TExpression
+	def update(self):
+		if not(hasattr(self,'_expressionDict')):
+			self._expressionDict=dict()
+		for k,v in self.traits().items():
+			if isinstance(v.handler,TExpressionTrait) or isinstance(v.handler,TExpressionTraitDelegatesTo) :
+				if not(self._expressionDict.has_key(k)):
+					self._expressionDict[k]=dict()
+				if isinstance(v.handler,TExpressionTrait) :
+					self.updateExpressionTrait(k,v.handler)
+				if isinstance(v.handler,TExpressionTraitDelegatesTo) :
+					self.updateExpressionTraitDelegatesTo(k,v.handler)
+		
+	def updateExpressionTrait(self,name,handler):
+		#print "updating updateExpressionTrait"
+		if not(self._expressionDict[name].has_key('hasmeta')):
+			self._expressionDict[name]['hasmeta']=True
+			try:
+				self.add_class_trait('E_'+name,handler.mytrait)
+
+				#print "added meta trait"
+			except Exception as e:
+				#print e
+				pass
+			#try:
+			#	#en=ExpressionTraitListener(self,name))
+			#	#self.add_trait_listener(ExpressionTraitListener(self,name))
+			#	#self._on_trait_change(lambda s,n: self.Echanged(name,n), 'E_'+name)
+			#	#self._on_trait_change(lambda s,n: self.changed(name,n),name)
+			#	#print "Added listener for "+ 'E_'+name
+			#except Exception as e:
+			#	#print e
+			#	pass
+				
+		self.updateExpressionTraitAll(name,handler)
+		
+	def updateExpressionTraitDelegatesTo(self,name,handler):
+		#print "updating updateExpressionTraitDelegatesTo"
+		if not(self._expressionDict[name].has_key('hasmeta')):
+			self._expressionDict[name]['hasmeta']=True
+			try:
+				myprefix=handler.prefix
+				if myprefix is '':
+					myprefix = name
+				self.add_class_trait('E_'+name,DelegatesTo(handler.delegate,prefix=myprefix))
+				#print "added meta trait delegation " + handler.delegate + " -> " + myprefix
+			except Exception as e:
+				#print e
+				pass
+			#try:
+			#	#self.add_trait_listener(ExpressionTraitListener(self,name))
+			#	#self._on_trait_change(lambda s,n: self.Echanged(name,n), 'E_'+name)
+			#	#self._on_trait_change(lambda s,n: self.changed(name,n),name)
+			#	print "Added listener for " + 'E_'+name
+			#except Exception as e:
+			#	#print e
+			#	pass
+			
+		self.updateExpressionTraitAll(name,handler)
+	
+	def updateExpressionTraitAll(self,name,handler):
+		input = getattr(self,name)
+		#print name + " input: ", input
+		#if self._expressionDict[name].has_key('Ecache'):
+		#	if self._expressionDict[name]['Ecache']!=getattr(self,'E_'+name):
+		#		self._expressionDict[name]['Ecache']=getattr(self,'E_'+name)
+		#		del self._expressionDict[name]['expression']
+		#		setattr(self,name,getattr(self,'E_'+name))
+		#		return
+		flag=False
+		if isinstance(input,str) or isinstance(input,unicode):
+			flag=True
+			if self._expressionDict[name].has_key('expression'):
+				#todo
+				self._expressionDict[name]['expression'].set_expr(input)
+			else :
+				self._expressionDict[name]['expression']=self.variables.new_expression(input)
+		elif isinstance(input,Expression):
+			flag=True
+			self._expressionDict[name]['expression']=input
+		else :
+			output=input
+		
+		if flag:
+			output=self._expressionDict[name]['expression'].get_curr_value()
+			
+		#self._expressionDict[name]['cache']=output
+		#print "output: ", output
+		if not(output==None):
+			setattr(self,'E_'+name,output)
+			
+	def changed(self,name,value):
+		pass
+		#print "We registered a change: " , name , " - " , value
+		
+	def Echanged(self,name,value):
+		#print "We registered a change: " , name , " - " , value
+		setattr(self,name,value)
+		
