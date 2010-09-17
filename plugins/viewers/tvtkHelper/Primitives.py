@@ -317,7 +317,7 @@ class Circle(PolyLine):
     Item(name = 'radius', style = 'custom'),
     Item(name = 'resolution'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
-    title = 'Line properties'
+    title = 'Circle properties'
    )
    def __init__(self,*args,**kwargs):
      PolyLine.__init__(self,*args,**kwargs)
