@@ -1,6 +1,6 @@
 from variables import Expression, Variables, HasExpressionTraits, TExpression
 
-from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int
+from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
   HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
 
@@ -225,9 +225,14 @@ class Plane(Primitive):
     
 class Line(Primitive):
    source=Instance(tvtk.LineSource)
+   point1=TExpression(DelegatesTo('source'))
+   point2=TExpression(DelegatesTo('source'))
    traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
+    Item(name = 'point1', style = 'custom'),
+    Item(name = 'point2', style = 'custom'),
+    Item(name = 'source', editor=InstanceEditor(), label = 'Source properties'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
    )
@@ -238,6 +243,31 @@ class Line(Primitive):
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
     
+class ProjectionLine(Line):
+  point=TExpression(Either(List,Tuple))
+  traits_view = View(
+    Item(name = 'parent', label='Frame'),
+    Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
+    Item(name = 'point', style = 'custom'),
+    Item(name = 'source', editor=InstanceEditor(), label = 'Source properties'),
+    Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
+    title = 'ProjectionLine properties'
+   )
+  def __init__(self,*args,**kwargs):
+    if kwargs.has_key('point'):
+      self.point=point
+      del kwargs['point']
+      Line.__init__(self,**kwargs)
+      
+  def __init__(self,*args,**kwargs):
+    Line.__init__(self,*args,**kwargs)
+    
+  def _E_point_changed(self,new):
+    if self.E_point is Undefined:
+      pass
+    self.source.point2=[self.E_point[0],self.E_point[1],0]
+    self.source.point1=self.E_point
+      
 # The following code is mainly from 
 # http://www.enthought.com/~rkern/cgi-bin/hgwebdir.cgi/colormap_explorer/file/a8aef0e90790/colormap_explorer/colormaps.py
 class PolyLine(Primitive):
