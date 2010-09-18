@@ -2,8 +2,8 @@ from variables import Expression, Variables, HasExpressionTraits, TExpression
 
 from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined, TraitType, Color
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
-  HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
-
+  HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor, ColorEditor
+  
 from enthought.tvtk.api import tvtk
 from plugins.viewers.tools3D.Frame import *
 
@@ -17,18 +17,7 @@ import colorsys
 
 from vtk.util import colors
 
-#class CColor(Color):
-#	default_value=(1,1,1)
-	
-#	def __init__(self,*args,**kwargs):
-#		Color.__init__(self,*args,**kwargs)
-	
-#	def validate(self,object,name,value):
-#		if isinstance(value,str) or isinstance(value,unicode):
-#			return getattr(colors,value)
-#		else:
-#			return Color.validate(self,object,name,value)
-
+from enthought.enable.colors import ColorTrait
 
 
 class NumpyArray(TraitType):
@@ -361,7 +350,7 @@ class FadePolyLine(Primitive):
    points=Instance(numpy.ndarray)
    mapper=Instance(tvtk.DataSetMapper)
    actor=Instance(tvtk.Actor)
-   color=Color
+   color=ColorTrait((1,1,1))
 
    traits_view = View(
     Item(name = 'parent', label='Frame'),
@@ -377,9 +366,10 @@ class FadePolyLine(Primitive):
     self.lut=self.mapper.lookup_table
     self.lut.alpha_range=(0,1)
     self.handle_arguments(*args,**kwargs)
+    self._color_changed(self.color)
     
    def _color_changed(self,color):
-      hsv=colorsys.rgb_to_hsv(color[0]/256.0,color[1]/256.0,color[2]/256.0)
+      hsv=colorsys.rgb_to_hsv(color[0],color[1],color[2])
       self.lut.hue_range=(hsv[0],hsv[0])
       self.lut.saturation_range=(hsv[1],hsv[1])
       self.lut.value_range=(hsv[2],hsv[2])
@@ -426,8 +416,10 @@ class Trace(FadePolyLine):
    length = Int(0)
    
    traits_view = View(
-    Item(name = 'length', label='Frame'),
+    Item(name = 'Frame', label='Frame'),
+    Item(name = 'length'),
     Item(name = 'point', style = 'custom'),
+    Item(name = 'color'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
    )
