@@ -54,6 +54,9 @@ class Primitive(HasExpressionTraits):
       elif len(self.actor.trait_get(k))>0:
          self.actor.__setattr__(k,v)
       elif len(self.properties.trait_get(k))>0:
+         if k=="color" and isinstance(v,str):
+           self.properties.color=getattr(colors,v)
+           return
          self.properties.__setattr__(k,v)
       elif len(self.source.trait_get(k))>0:
          self.source.__setattr__(k,v)

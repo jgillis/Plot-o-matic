@@ -23,31 +23,24 @@ class Logo(PrimitiveCollection):
        Text(self.frame,text='Joby')
     ]
     
-class Logo(PrimitiveCollection):
-  def __init__(self,frame,T=None,**kwargs):
-    PrimitiveCollection.__init__(self,frame,T)
-    self.primitives=[
-       Text(self.frame,text='Joby')
-    ]
-    
 class TVTKconfig(PrimitiveCollection):
   def __init__(self,w):
 
     PrimitiveCollection.__init__(self,w)
     
-    self.add(Box(w,x_length='time',y_length=2))
-    f=Frame(w,T='tr(3*sin(time),0,0)*tr(0,0,1)')
-    self.add(Box(f))
-    self.add(Box(f,T='tr(0,0,1)',color=colors.red))
-    g=Frame(f,T='TRz(time)')
-    self.add(Box(g,T='tr(2,0,0)',color=colors.blue))
+    self.add(Box(w,x_length='time',y_length=2,color='red'))
+    #f=Frame(w,T='tr(3*sin(time),0,0)*tr(0,0,1)')
+    #self.add(Box(f))
+    #self.add(Box(f,T='tr(0,0,1)',color='red'))
+    #g=Frame(f,T='TRz(time)')
+    #self.add(Box(g,T='tr(2,0,0)',color='blue'))
     
-    self.add(Arnold1(w,T='tr(0,0,time)',color=colors.red))
-    #self.add(Lag(Arnold1(w,T='tr(0,0,time)',color=colors.red),10))
+    #self.add(Arnold1(w,T='tr(0,0,time)',color='red'))
+    #self.add(Lag(Arnold1(w,T='tr(0,0,time)',color='red'),10))
 
-    self.add(Arrow(g,color=colors.red))
-    self.add(Circle(g,T='tr(0,0,10)',radius=4))
-    self.add(Trace(w,point='[time,sin(time),3]'))
+    #self.add(Arrow(g,color=colors.red))
+    #self.add(Circle(g,T='tr(0,0,10)',radius=4))
+    #self.add(Trace(w,point='[time,sin(time),3]'))
     
     #self.add(FadePolyLine(w,points='[sin(time),cos(time),0]'))
     #c=Circle(w,T='tr(0,0,10)',radius=4)
@@ -57,7 +50,7 @@ class TVTKconfig(PrimitiveCollection):
     #self.add(Line(w,color=colors.red,point1='(1,2,3)'))
     #self.add(ProjectionLine(w,color=colors.red,point=(1,2,3)))
    # self.add(Arnold1(w,color=colors.red))
-    #self.add(Trace(w,point='[time,sin(time),3]'))
+    self.add(Trace(w,point='[time,sin(time),3]'))
     #self.add(Circle(w,radius='time'))
     
     #self.add(Box(w,T='tr(10*cos(time),2,0)',x_length=2))
@@ -80,7 +73,7 @@ class TVTKconfig2(PrimitiveCollection):
     airframe=Frame(ned,'tr(AP_EST2USER_0_r_n2b_n_x,AP_EST2USER_0_r_n2b_n_y,AP_EST2USER_0_r_n2b_n_z)*quat(AP_EST2USER_0_q_n2b_q0,AP_EST2USER_0_q_n2b_q1,AP_EST2USER_0_q_n2b_q2,AP_EST2USER_0_q_n2b_q3)')
 
     ax=Frame(ned,'sc(50)')
-    self.add(Arrow(ax,color=colors.red))
+    self.add(Arrow(ax,color='red'))
     self.add(Text(ax,T='tr(1,0,0)*sc(0.1)',text='N / X'))
     self.add(Arrow(ax,T='TRz(pi/2)',color=colors.green))
     self.add(Text(ax,T='tr(0,1,0)*sc(0.1)',text='E / Y'))
