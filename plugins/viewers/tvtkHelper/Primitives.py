@@ -527,10 +527,9 @@ class PrimitiveCollection(HasTraits):
     return self.primitives
     
   def __init__(self,frame,T=None):
-    if T is None:
-      self.frame=frame
-    else :
-      self.frame=Frame(frame,T)
+    if not(T is None):
+      self.T=T
+    self.frame=frame
       
   def add(self, arg):
     if isinstance(arg,list):

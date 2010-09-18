@@ -36,15 +36,14 @@ class TVTKViewer(Viewer):
     title = 'Viewer'
   )
 
-  def __init__(self,config=None):
+  def __init__(self,vs,config):
     Viewer.__init__(self)
-    self.config=config
+    world=WorldFrame(vs)
+    self.config=config(world)
 
   def start(self):
     self.primitives=self.config.getPrimitives()
-    print "length:", len(self.primitives)
     map(lambda x: x.add_to_scene(self.scene),self.primitives)
-    print "length:", len(self.primitives)
     
   def stop(self):
     pass
