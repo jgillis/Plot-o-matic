@@ -348,9 +348,7 @@ class PolyLine(Primitive):
 #tvtk.DataSetMapper allows fancy things with colors, but not with opacity
 #actor.set_lut(mm.scalar_lut_manager.lut)
 
-class FadePolyLine(Primitive):
-   source=Instance(tvtk.PolyData)
-   points=Instance(numpy.ndarray)
+class FadePolyLine(PolyLine):
    mapper=Instance(tvtk.DataSetMapper)
    actor=Instance(tvtk.Actor)
    color=ColorTrait((1,1,1))
@@ -378,15 +376,8 @@ class FadePolyLine(Primitive):
       self.lut.value_range=(hsv[2],hsv[2])
       
    def _points_changed(self,old, new):
-    npoints = len(self.points)
-    if npoints<2 :
-      return
-    lines = np.zeros((npoints-1, 2), dtype=int)
-    lines[:,0] = np.arange(0, npoints-1)
-    lines[:,1] = np.arange(1, npoints)
-    self.source.points=self.points
-    self.source.lines=lines
-    self.source.point_data.scalars=np.linspace(0,1,npoints)
+    PolyLine._points_changed(self,old, new)
+    self.source.point_data.scalars=np.linspace(0,1,self.points.shape[0])
 
 class Circle(PolyLine):
    radius=TExpression(Float)
