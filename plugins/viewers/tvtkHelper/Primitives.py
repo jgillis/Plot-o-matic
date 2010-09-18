@@ -1,6 +1,6 @@
 from variables import Expression, Variables, HasExpressionTraits, TExpression
 
-from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined, TraitType
+from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, PrototypedFrom,DelegatesTo, Any, on_trait_change, Float, Range, Int, Tuple, Undefined, TraitType, Color
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
   HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
 
@@ -12,6 +12,8 @@ from numpy import array, ndarray, linspace, zeros
 # actor inherits from Prop3D
 
 import numpy as np
+
+import colorsys
 
 class NumpyArray(TraitType):
 	def validate(self,object,name,value):
@@ -85,9 +87,9 @@ class Primitive(HasExpressionTraits):
        
 class Cone(Primitive):
   source = Instance(tvtk.ConeSource)
-  height= DelegatesTo('source')
-  radius= DelegatesTo('source')
-  resolution= DelegatesTo('source')
+  height= TExpression(DelegatesTo('source'))
+  radius= TExpression(DelegatesTo('source'))
+  resolution= TExpression(DelegatesTo('source'))
   traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
@@ -135,7 +137,7 @@ class Axes(Primitive):
   tube = Instance(tvtk.TubeFilter)
   
   scale_factor=DelegatesTo('tube')
-  radius=DelegatesTo('tube')
+  radius=TExpression(DelegatesTo('tube'))
   sides=PrototypedFrom('tube','number_of_sides')
   
   traits_view = View(
@@ -155,9 +157,9 @@ class Axes(Primitive):
 
 class Cylinder(Primitive):
   source = Instance(tvtk.CylinderSource)
-  height= DelegatesTo('source')
-  radius= DelegatesTo('source')
-  resolution= DelegatesTo('source')
+  height= TExpression(DelegatesTo('source'))
+  radius= TExpression(DelegatesTo('source'))
+  resolution= TExpression(DelegatesTo('source'))
   traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
@@ -176,7 +178,7 @@ class Cylinder(Primitive):
 
 class Sphere(Primitive):
   source=Instance(tvtk.SphereSource)
-  radius=DelegatesTo('source')
+  radius=TExpression(DelegatesTo('source'))
   theta_resolution=DelegatesTo('source')
   phi_resolution=DelegatesTo('source')
   traits_view = View(
@@ -198,10 +200,14 @@ class Sphere(Primitive):
 class Arrow(Primitive):
    source=Instance(tvtk.ArrowSource)
    tip_resolution = DelegatesTo("source")
+   point1=TExpression(NumpyArray)
+   point2=TExpression(NumpyArray)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
-    Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
+    Item(name = 'from',style = 'custom'),
+    Item(name = 'to',style = 'custom'),
     Item(name = 'tip_resolution'),
+    Item(name = 'source', editor=InstanceEditor(), label = 'Geometric properties'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Arrow properties'
    )
@@ -211,6 +217,8 @@ class Arrow(Primitive):
     self.mapper = tvtk.PolyDataMapper(input=self.source.output)
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
+    
+    
 
 class Plane(Primitive):
    source=Instance(tvtk.PlaneSource)
@@ -282,7 +290,6 @@ class PolyLine(Primitive):
    points=Instance(numpy.ndarray)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
-    Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
    )
