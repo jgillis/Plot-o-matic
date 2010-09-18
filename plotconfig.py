@@ -23,8 +23,40 @@ class Logo(PrimitiveCollection):
     self.primitives=[
        Text(self.frame,text='Joby')
     ]
-
+    
+class Logo(PrimitiveCollection):
+  def __init__(self,frame,T=None,**kwargs):
+    PrimitiveCollection.__init__(self,frame,T)
+    self.primitives=[
+       Text(self.frame,text='Joby')
+    ]
+    
 class TVTKconfig(PrimitiveCollection):
+  def __init__(self,variables):
+    self.variables=variables
+    w=WorldFrame(variables)
+
+    self.add(Arrow(w,color=colors.red))
+    self.add(FadePolyLine(w,points=rand(100,3)))
+    c=Circle(w,T='tr(0,0,10)',radius=4)
+    self.add(c)
+    self.add(ProjectedPolyLine(w,watch=c,representation='wireframe'))
+    
+    #self.add(Line(w,color=colors.red,point1='(1,2,3)'))
+    #self.add(ProjectionLine(w,color=colors.red,point=(1,2,3)))
+   # self.add(Arnold1(w,color=colors.red))
+    #self.add(Trace(w,point='[time,sin(time),3]'))
+    #self.add(Circle(w,radius='time'))
+    
+    #self.add(Box(w,T='tr(10*cos(time),2,0)',x_length=2))
+    #self.add(Box(w,T='tr(10*sin(time),2,0)',x_length=2))
+    #b=Box(w,T='tr(10*cos(time),0,0)',x_length=2)
+    #self.add(b)
+    #self.add(Lag(b,5))
+    
+
+
+class TVTKconfig2(PrimitiveCollection):
   def __init__(self,variables):
     self.variables=variables
     w=WorldFrame(variables)
@@ -51,7 +83,7 @@ class TVTKconfig(PrimitiveCollection):
 
     self.add(Arnold1(airframe,color=colors.red))
 
-
+    self.add(Arnold1(w,color=colors.red))
     self.add(Logo(ned))
     
     self.add(Circle(diskframe,radius=variables.new_expression('AP_DISK_radius')))

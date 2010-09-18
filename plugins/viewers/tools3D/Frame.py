@@ -7,7 +7,7 @@ from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
 
 from numpy import eye
 
-
+#numpy.matrix
 
 class Frame(HasTraits):
   parent=This

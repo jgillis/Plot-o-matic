@@ -23,11 +23,11 @@ class NumpyArray(TraitType):
 
 class Primitive(HasExpressionTraits):
   parent=Instance(Frame)
-  T = TExpression(numpy.ndarray)
+  T = TExpression(numpy.matrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   #actor = Instance(tvtk.Actor)
-  tm = tvtk.Matrix4x4
+  TM = Instance(numpy.matrix)
   variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
   lag=Int(0)
@@ -62,18 +62,31 @@ class Primitive(HasExpressionTraits):
     
   def update(self):
       HasExpressionTraits.update(self)
+      TMt=None
       if hasattr(self,'T'):
         if self.E_T !=None :
           p = self.parent.evalT(self.lag)
           if p!=None:
-            self.tm.deep_copy(array(p*self.E_T).ravel())
-            self.actor.poke_matrix(self.tm)
+            TMt=np.matrix(p*self.E_T)
+          else:
+             return
       else:
         p=self.parent.evalT(self.lag)
         if p!=None:
-          self.tm.deep_copy(array(p).ravel())
-          self.actor.poke_matrix(self.tm)
-      
+          TMt=np.matrix(p)
+        else:
+           return
+      if TMt is None:
+         return
+      self.tm.deep_copy(array(TMt).ravel())
+      self.actor.poke_matrix(self.tm)
+      print "GRRR", self.TM,  TMt
+      if not(self.TM is Undefined or self.TM is None):
+         if (self.TM!=TMt).any():
+            print "updated cache"
+            self.TM=TMt
+      else:
+         self.TM=TMt
 
   def add_to_scene(self,sc):
        sc.add_actors(self.actor)
@@ -196,7 +209,12 @@ class Sphere(Primitive):
     self.mapper = tvtk.PolyDataMapper(input=self.source.output)
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
-
+    
+class Point(Sphere):
+	def __init__(self,*args,**kwargs):
+		Sphere.__init__(self,**kwargs)
+		self.radius=0.05
+		
 class Arrow(Primitive):
    source=Instance(tvtk.ArrowSource)
    tip_resolution = DelegatesTo("source")
@@ -256,7 +274,7 @@ class Line(Primitive):
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
     
-class ProjectionLine(Line):
+class ProjectedPoint(Line):
   point=TExpression(Either(List,Tuple))
   point1=None
   point2=None
@@ -282,7 +300,9 @@ class ProjectionLine(Line):
       pass
     self.source.point2=[self.E_point[0],self.E_point[1],0]
     self.source.point1=self.E_point
-      
+
+
+
 # The following code is mainly from 
 # http://www.enthought.com/~rkern/cgi-bin/hgwebdir.cgi/colormap_explorer/file/a8aef0e90790/colormap_explorer/colormaps.py
 class PolyLine(Primitive):
@@ -357,6 +377,7 @@ class FadePolyLine(Primitive):
 class Circle(PolyLine):
    radius=TExpression(Float)
    resolution=Int(100)
+   points=Instance(numpy.ndarray)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
@@ -369,12 +390,18 @@ class Circle(PolyLine):
      PolyLine.__init__(self,*args,**kwargs)
      
    def _E_radius_changed(self):
+     self.calc()
+     
+   def _resolution_changed(self):
+     self.calc()
+     
+   def calc(self):
      t=linspace(0,6.29,self.resolution)
      if not(self.E_radius is Undefined) :
      	self.points = array([self.E_radius*sin(t),self.E_radius*cos(t),zeros(t.shape)]).T
-    
 class Trace(PolyLine):
    point=TExpression(NumpyArray)
+   points=Instance(numpy.ndarray)
    length = Int(0)
    
    traits_view = View(
@@ -393,6 +420,44 @@ class Trace(PolyLine):
        #history=expression.get_array(first=-3*self.length)
        #print history, history.shape
        #print history.reshape((3,history.shape[0]/3))
+
+class ProjectedPolyLine(Primitive):
+	from numpy import *
+	watch=Instance(PolyLine)
+	watchpoints=DelegatesTo('watch',prefix='points')
+	watchTM=DelegatesTo('watch',prefix='TM')
+	pd=Instance(tvtk.PolyData)
+	polypoints=DelegatesTo('pd',prefix='points')
+	polys=DelegatesTo('pd')
+	
+	traits_view = View(
+	 Item(name = 'watch', editor=InstanceEditor()),
+	 Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
+	 title = 'ProjectedPolyLine properties'
+	)
+	def __init__(self,*args,**kwargs):
+		Primitive.__init__(self,**kwargs)
+		self.pd=tvtk.PolyData()
+		self.mapper = tvtk.PolyDataMapper(input=self.pd)
+		self.actor = tvtk.Actor(mapper=self.mapper)
+		self.handle_arguments(*args,**kwargs)
+		
+	def _watchpoints_changed(self,new):
+		self.calc()
+
+	def _watchTM_changed(self,new):
+		self.calc()
+
+	def calc(self):
+		project=lambda x: (x[0],x[1],0)
+		q=self.watchpoints
+		if not(q is Undefined or q is None):
+			if not(self.watch.TM is None):
+				q=array((self.watch.TM*np.hstack((q,np.ones((q.shape[0],1)))).T).T)
+				n=q[:,3]
+				q=q[:,0:3]/(np.vstack((n,n,n)).T+0.0)
+			self.polypoints=np.hstack((q,map(project,q))).reshape((q.shape[0]*2,3))
+			self.polys=array([[i*2,2*i+1,2*i+3,2*i+2] for i in range(q.shape[0]-1)])
 
 
      
