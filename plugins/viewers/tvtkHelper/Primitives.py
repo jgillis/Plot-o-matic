@@ -303,6 +303,49 @@ class PolyLine(Primitive):
     lines[:,1] = np.arange(1, npoints)
     self.source.points=self.points
     self.source.lines=lines
+    
+#tvtk.DataSetMapper allows fancy things with colors, but not with opacity
+#actor.set_lut(mm.scalar_lut_manager.lut)
+
+class FadePolyLine(Primitive):
+   source=Instance(tvtk.PolyData)
+   points=Instance(numpy.ndarray)
+   mapper=Instance(tvtk.DataSetMapper)
+   actor=Instance(tvtk.Actor)
+   color=Color
+
+   traits_view = View(
+    Item(name = 'parent', label='Frame'),
+    Item(name = 'color'),
+    Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
+    title = 'Line properties'
+   )
+   def __init__(self,*args,**kwargs):
+    Primitive.__init__(self,**kwargs)
+    self.source = tvtk.PolyData()
+    self.mapper = tvtk.DataSetMapper(input=self.source)
+    self.actor = tvtk.Actor(mapper=self.mapper)
+    self.lut=self.mapper.lookup_table
+    self.lut.alpha_range=(0,1)
+    self.handle_arguments(*args,**kwargs)
+    
+   def _color_changed(self,color):
+      hsv=colorsys.rgb_to_hsv(color[0]/256.0,color[1]/256.0,color[2]/256.0)
+      print color , " -> " , hsv
+      self.lut.hue_range=(hsv[0],hsv[0])
+      self.lut.saturation_range=(hsv[1],hsv[1])
+      self.lut.value_range=(hsv[2],hsv[2])
+      
+   def _points_changed(self,old, new):
+    npoints = len(self.points)
+    if npoints<2 :
+      return
+    lines = np.zeros((npoints-1, 2), dtype=int)
+    lines[:,0] = np.arange(0, npoints-1)
+    lines[:,1] = np.arange(1, npoints)
+    self.source.points=self.points
+    self.source.lines=lines
+    self.source.point_data.scalars=np.linspace(0,1,npoints)
 
 class Circle(PolyLine):
    radius=TExpression(Float)
