@@ -214,10 +214,13 @@ class Expression(HasTraits):
     
     if last > self._data_array_cache_index:
       #print "Cache miss of", (last - self._data_array_cache_index)
-      self._data_array_cache = numpy.append(self._data_array_cache, self._vars._get_array(self._expr, self._data_array_cache_index, last))
+      if self._data_array_cache.shape[0]==0:
+        self._data_array_cache =self._vars._get_array(self._expr, self._data_array_cache_index, last)
+      else: 
+        self._data_array_cache = numpy.vstack((self._data_array_cache, self._vars._get_array(self._expr, self._data_array_cache_index, last)))
       self._data_array_cache_index = last
 
-    return self._data_array_cache[first:last]
+    return self._data_array_cache[first:last,...]
 
 		
 def TExpression(mytrait):
