@@ -1,13 +1,26 @@
 from variables import Expression, Variables, HasExpressionTraits
 
-from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, DelegatesTo, Any, on_trait_change, Float, Range
+from enthought.traits.api import HasTraits, Str, Regex, Either,This, List, Instance, DelegatesTo, Any, on_trait_change, Float, Range, TraitType
 from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
   HGroup, Handler, Group, Include, ValueEditor, HSplit, ListEditor, InstanceEditor
 
 
-from numpy import eye
+from numpy import eye,matrix
 
 #numpy.matrix
+
+class TransformationMatrix(TraitType):
+	default_value=eye(4)
+	def validate(self,object,name,value):
+		try:
+			matrix(value)
+			return matrix(value)
+		except:
+			print e
+			return None
+
+	def get_editor(self,object):
+		return TextEditor()
 
 class Frame(HasTraits):
   parent=This

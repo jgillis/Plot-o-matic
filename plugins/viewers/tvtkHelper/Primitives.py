@@ -23,7 +23,7 @@ class NumpyArray(TraitType):
 
 class Primitive(HasExpressionTraits):
   parent=Instance(Frame)
-  T = TExpression(numpy.matrix)
+  T = TExpression(TransformationMatrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   #actor = Instance(tvtk.Actor)
@@ -511,7 +511,7 @@ class Image(Primitive):
 class PrimitiveCollection(HasTraits):
   #primitives=List(Either(Primitive,This))
   primitives=List(Instance(HasTraits))
-  T=Instance(Expression)
+  T=TExpression(TransformationMatrix)
   frame=Instance(Frame)
   
   traits_view = View(
