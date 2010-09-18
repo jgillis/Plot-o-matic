@@ -242,6 +242,8 @@ class TExpressionTrait(TraitType):
 		
 	def __init__(self,mytrait):
 		self.mytrait=mytrait
+		if hasattr(mytrait,'default_value'):
+			self.default_value=mytrait.default_value
 		TraitType.__init__(self)
 	
 	def get_editor(self,object):
