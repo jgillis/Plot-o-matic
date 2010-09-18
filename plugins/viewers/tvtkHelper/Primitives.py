@@ -15,6 +15,22 @@ import numpy as np
 
 import colorsys
 
+from vtk.util import colors
+
+#class CColor(Color):
+#	default_value=(1,1,1)
+	
+#	def __init__(self,*args,**kwargs):
+#		Color.__init__(self,*args,**kwargs)
+	
+#	def validate(self,object,name,value):
+#		if isinstance(value,str) or isinstance(value,unicode):
+#			return getattr(colors,value)
+#		else:
+#			return Color.validate(self,object,name,value)
+
+
+
 class NumpyArray(TraitType):
 	def validate(self,object,name,value):
 		return array(value)
