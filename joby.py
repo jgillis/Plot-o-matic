@@ -296,9 +296,9 @@ vs = Variables()
 viewers = Viewers(variables = vs)
 
 from plotconfig import TVTKconfig
-config=TVTKconfig(vs)
 
-viewers._add_viewer(TVTKViewer(config))
+viewers._add_viewer(TVTKViewer(vs,TVTKconfig))
+
 
 iodl = IODriverList(io_drivers = [], variables = vs, viewers_instance = viewers)
 proj = PlotOMatic(io_driver_list = iodl, variables = vs, viewers = viewers)
