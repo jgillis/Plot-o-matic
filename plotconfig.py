@@ -32,15 +32,28 @@ class Logo(PrimitiveCollection):
     ]
     
 class TVTKconfig(PrimitiveCollection):
-  def __init__(self,variables):
-    self.variables=variables
-    w=WorldFrame(variables)
+  def __init__(self,w):
 
-    self.add(Arrow(w,color=colors.red))
-    self.add(FadePolyLine(w,points=rand(100,3)))
-    c=Circle(w,T='tr(0,0,10)',radius=4)
-    self.add(c)
-    self.add(ProjectedPolyLine(w,watch=c,representation='wireframe'))
+    PrimitiveCollection.__init__(self,w)
+    
+    self.add(Box(w,x_length='time',y_length=2))
+    f=Frame(w,T='tr(3*sin(time),0,0)*tr(0,0,1)')
+    self.add(Box(f))
+    self.add(Box(f,T='tr(0,0,1)',color=colors.red))
+    g=Frame(f,T='TRz(time)')
+    self.add(Box(g,T='tr(2,0,0)',color=colors.blue))
+    
+    self.add(Arnold1(w,T='tr(0,0,time)',color=colors.red))
+    #self.add(Lag(Arnold1(w,T='tr(0,0,time)',color=colors.red),10))
+
+    self.add(Arrow(g,color=colors.red))
+    self.add(Circle(g,T='tr(0,0,10)',radius=4))
+    self.add(Trace(w,point='[time,sin(time),3]'))
+    
+    #self.add(FadePolyLine(w,points='[sin(time),cos(time),0]'))
+    #c=Circle(w,T='tr(0,0,10)',radius=4)
+    #self.add(c)
+    #self.add(ProjectedPolyLine(w,watch=c,representation='wireframe'))
     
     #self.add(Line(w,color=colors.red,point1='(1,2,3)'))
     #self.add(ProjectionLine(w,color=colors.red,point=(1,2,3)))
