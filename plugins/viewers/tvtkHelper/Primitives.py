@@ -72,8 +72,7 @@ class Primitive(HasExpressionTraits):
          print "unknown argument", k , v
 
     if not(self.parent):
-      print "problem - no parent", self
-      #self.parent = WorldFrame()
+      raise Exception('All primitives must have a parent', 'All primitives must have a parent')
          
   def __init__(self,**kwargs):
     self.tm=tvtk.Matrix4x4()
@@ -102,12 +101,11 @@ class Primitive(HasExpressionTraits):
       if TMt is None:
          return
       TMt=pre*TMt*post
-      print "Pre, post", pre, post
       self.tm.deep_copy(array(TMt).ravel())
       self.actor.poke_matrix(self.tm)
       if not(self.TM is Undefined or self.TM is None):
          if (self.TM!=TMt).any():
-            print "updated cache"
+            #updating cache
             self.TM=TMt
       else:
          self.TM=TMt
@@ -382,7 +380,6 @@ class FadePolyLine(Primitive):
     
    def _color_changed(self,color):
       hsv=colorsys.rgb_to_hsv(color[0]/256.0,color[1]/256.0,color[2]/256.0)
-      print color , " -> " , hsv
       self.lut.hue_range=(hsv[0],hsv[0])
       self.lut.saturation_range=(hsv[1],hsv[1])
       self.lut.value_range=(hsv[2],hsv[2])
@@ -570,7 +567,6 @@ class PrimitiveCollection(HasExpressionTraits):
         pre=self.e
       if post is None:
         post=self.e
-      print "Help me",pre, post, self.E_T
       map(lambda x: x.update(pre=pre*self.E_T,post=post),self.primitives)
 
   def add_to_scene(self,sc):

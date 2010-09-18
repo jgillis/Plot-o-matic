@@ -196,7 +196,6 @@ class Expression(HasTraits):
   def get_historic_value(self,lag):
     if len(self._vars.vars_list) > lag:
         vars_pool = self._vars.vars_list[-lag-1]
-        print self._vars._eval_expr(self._expr,vars_pool), lag
         return self._vars._eval_expr(self._expr,vars_pool)
     return None
 
@@ -213,16 +212,13 @@ class Expression(HasTraits):
 		
 def TExpression(mytrait):
 	if isinstance(mytrait,DelegatesTo):
-		#print "interesting"
 		return TExpressionTraitDelegatesTo(mytrait.delegate,mytrait.prefix)
-		#print " or not"
 	else:
 		return TExpressionTrait(mytrait)
 
-	
+#Possibly we need this to do cloning
 class ExpressionTraitListener(HasTraits):
 	def Echanged(self, new):
-		print self.name + "=" , new
 		setattr(self,self.name,new)
 		
 	def changed(self, new):
@@ -236,8 +232,6 @@ class ExpressionTraitListener(HasTraits):
 		print "registering " +'_E_' + name + '_changed'
 		print "registering " +'_' + name + '_changed'
 		setattr(self,'_' +  name + '_changed',self.changed)
-	def _width_changed(self):
-		print "howdy\n\n"
 
 		
 class TExpressionTrait(TraitType):
@@ -252,7 +246,7 @@ class TExpressionTrait(TraitType):
 	
 	def get_editor(self,object):
 		return TextEditor()
-	
+
 class TExpressionTraitDelegatesTo(TraitType):
 	def __init__(self,delegate,prefix):
 		self.delegate=delegate
@@ -329,7 +323,7 @@ class HasExpressionTraits(HasTraits):
 	
 	def updateExpressionTraitAll(self,name,handler):
 		input = getattr(self,name)
-		print name + " input: ", input
+		#print name + " input: ", input
 		#if self._expressionDict[name].has_key('Ecache'):
 		#	if not(self._expressionDict[name]['Ecache'] != getattr(self,'E_'+name)):
 		#		print "Forcing a refresh"
@@ -363,7 +357,7 @@ class HasExpressionTraits(HasTraits):
 			try:
 				setattr(self,'E_'+name,output)
 				#self._expressionDict[name]['Ecache']=output
-				print "Set output to ", output
+				#print "Set output to ", output
 			except Exception as e:
 				print e
 		
