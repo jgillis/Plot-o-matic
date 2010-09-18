@@ -541,7 +541,7 @@ class PrimitiveCollection(HasExpressionTraits):
   e=np.eye(4)
   
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'primitives', editor=ListEditor(),style='custom'),
     title = 'Collection properties'
