@@ -420,9 +420,9 @@ class Circle(PolyLine):
      t=linspace(0,6.29,self.resolution)
      if not(self.E_radius is Undefined) :
      	self.points = array([self.E_radius*sin(t),self.E_radius*cos(t),zeros(t.shape)]).T
-class Trace(PolyLine):
+
+class Trace(FadePolyLine):
    point=TExpression(NumpyArray)
-   points=Instance(numpy.ndarray)
    length = Int(0)
    
    traits_view = View(
@@ -432,15 +432,12 @@ class Trace(PolyLine):
     title = 'Line properties'
    )
    def __init__(self,*args,**kwargs):
-     PolyLine.__init__(self,*args,**kwargs)
+     FadePolyLine.__init__(self,*args,**kwargs)
      
    def _E_point_changed(self,new):
      if hasattr(self,'Ex_point'):
        expression=self.Ex_point
-       #fix this
-       #history=expression.get_array(first=-3*self.length)
-       #print history, history.shape
-       #print history.reshape((3,history.shape[0]/3))
+       self.points=expression.get_array(first=-self.length)
 
 class ProjectedPolyLine(Primitive):
 	from numpy import *
