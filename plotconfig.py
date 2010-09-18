@@ -1,7 +1,6 @@
 from variables import Variables, Expression
 
-from plugins.viewers.tools3D.Frame import *
-from plugins.viewers.tvtkHelper.Primitives import *
+from plugins.viewers.tvtkHelper.toolbox import *
 
 from vtk.util import colors
 
