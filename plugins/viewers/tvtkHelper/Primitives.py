@@ -47,7 +47,7 @@ class Primitive(HasExpressionTraits):
   variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
   lag=Int(0)
-  
+  e=np.eye(4)
   #This should also add delegated trait objects.
   def handle_arguments(self,*args,**kwargs): 
     HasTraits.__init__(self)		#magic by fnoble
@@ -72,13 +72,18 @@ class Primitive(HasExpressionTraits):
          print "unknown argument", k , v
 
     if not(self.parent):
-      self.parent = WorldFrame()
+      print "problem - no parent", self
+      #self.parent = WorldFrame()
          
   def __init__(self,**kwargs):
     self.tm=tvtk.Matrix4x4()
     pass
     
-  def update(self):
+  def update(self,pre=None,post=None):
+      if pre is None:
+        pre=self.e
+      if post is None:
+        post=self.e
       HasExpressionTraits.update(self)
       TMt=None
       if hasattr(self,'T'):
@@ -96,9 +101,10 @@ class Primitive(HasExpressionTraits):
            return
       if TMt is None:
          return
+      TMt=pre*TMt*post
+      print "Pre, post", pre, post
       self.tm.deep_copy(array(TMt).ravel())
       self.actor.poke_matrix(self.tm)
-      print "GRRR", self.TM,  TMt
       if not(self.TM is Undefined or self.TM is None):
          if (self.TM!=TMt).any():
             print "updated cache"
@@ -526,11 +532,13 @@ class Image(Primitive):
 
 # LineSource, PlaneSource
 
-class PrimitiveCollection(HasTraits):
+class PrimitiveCollection(HasExpressionTraits):
   #primitives=List(Either(Primitive,This))
   primitives=List(Instance(HasTraits))
   T=TExpression(TransformationMatrix)
   frame=Instance(Frame)
+  variables=DelegatesTo('frame')
+  e=np.eye(4)
   
   traits_view = View(
     Item(name = 'parent', label='Frame'),
@@ -556,9 +564,15 @@ class PrimitiveCollection(HasTraits):
       #self.add(arg.getPrimitives()) 
       self.primitives.append(arg)
 
-  def update(self):
-       map(lambda x: x.update(),self.primitives)
-      
+  def update(self,pre=None,post=None):
+      HasExpressionTraits.update(self)
+      if pre is None:
+        pre=self.e
+      if post is None:
+        post=self.e
+      print "Help me",pre, post, self.E_T
+      map(lambda x: x.update(pre=pre*self.E_T,post=post),self.primitives)
+
   def add_to_scene(self,sc):
        self.scene=sc
        map(lambda x: x.add_to_scene(sc),self.primitives)
