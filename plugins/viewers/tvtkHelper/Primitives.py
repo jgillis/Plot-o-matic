@@ -615,7 +615,7 @@ class Strobe(PrimitiveCollection):
 			self.add_to_scene(self.scene)
 	
 def Lag(shape,lag):
-	cl=shape.clone_traits()
+	cl=shape
 	cl.setall('lag',lag)
 	return cl
 		
