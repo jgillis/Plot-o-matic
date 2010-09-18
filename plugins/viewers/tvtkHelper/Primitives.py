@@ -38,6 +38,8 @@ class Primitive(HasExpressionTraits):
     for a in args:
       if isinstance(a,Frame):
         self.parent=a
+      if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,numpy.matrix):
+        self.T=a
     for k,v in kwargs.items():
       if k == 'frame':
         self.parent=v
