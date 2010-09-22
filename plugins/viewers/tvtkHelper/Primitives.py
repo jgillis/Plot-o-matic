@@ -18,7 +18,7 @@ import colorsys
 from vtk.util import colors
 
 from enthought.enable.colors import ColorTrait
-
+from enthought.mayavi.sources.image_reader import ImageReader
 
 class NumpyArray(TraitType):
 	def validate(self,object,name,value):
@@ -487,25 +487,24 @@ class Text(Primitive):
     #kwargs.get('foo', 12)  fnoble cleverity
 
 class Image(Primitive):
-    source=Instance(tvtk.ImageReader)
-    file_name=DelegatesTo('source')
+    source=Instance(ImageReader)
+    file=DelegatesTo('source',prefix='base_file_name')
     traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
-    Item(name = 'file_name'),
+    Item(name = 'file'),
     Item(name = 'source', editor=InstanceEditor()),
     Item(name = 'actor', editor=InstanceEditor()),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Image properties'
     )
+
     def __init__(self,*args,**kwargs):
         Primitive.__init__(self,**kwargs)
-        self.source=tvtk.ImageReader(file_name="woodpecker.bmp") # im.ouput
-        self.source.set_data_scalar_type_to_unsigned_char()
-        #self.mapper = tvtk.ImageMapper(input=self.source.output)
-        #self.actor = tvtk.Actor2D(mapper=self.mapper)
-        self.actor=tvtk.ImageActor(input=self.source.output)
+        self.source=ImageReader(base_file_name=kwargs['file']) # im.ouput
+        self.actor=tvtk.ImageActor(input=self.source.reader.output)
         self.handle_arguments(*args,**kwargs)
+
     
     
     
