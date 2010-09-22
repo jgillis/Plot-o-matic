@@ -323,6 +323,7 @@ class HasExpressionTraits(HasTraits):
 	
 class TExpressionWrapper(HasExpressionTraits):
 	parent = Instance(HasTraits)
+	lag = DelegatesTo('parent')
 	variables = DelegatesTo('parent')
 	expression = Instance(Expression)
 	_expr = DelegatesTo('expression')
@@ -355,10 +356,7 @@ class TExpressionWrapper(HasExpressionTraits):
 		if (self.is_pure):
 			return self.value
 		else:
-			if hasattr(self.parent,'lag') or self.lag==0:
-				return self.expression.get_historic_value(self.lag)
-			else:
-				return self.expression.get_current_value()
+			return self.expression.get_historic_value(self.lag)
 			
 	def is_expr_string(self,input):
 		if isinstance(input,str) or isinstance(input,unicode):
