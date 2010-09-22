@@ -75,8 +75,10 @@ class WorldFrame(Frame):
 from numpy import matrix, sin, cos
 
 class FrameHelperFunctions:
-
-
+  e1=matrix([1,0,0])
+  e2=matrix([0,1,0])
+  e3=matrix([0,0,1])
+  
   def TRx(a):
     return  matrix([[1,0,0,0],[0,cos(a),-sin(a),0],[0,sin(a),cos(a),0],[0,0,0,1]])
 
@@ -97,9 +99,31 @@ class FrameHelperFunctions:
 
   def quat(a,b,c,d):
     return matrix([[	a*a+b*b-c*c-d*d,	2*b*c-2*a*d,	2*b*d+2*a*c,	0],
-		[	2*b*c+2*a*d,		a*a-b*b+c*c-d*d,2*c*d-2*a*b,	0],
-		[	2*b*d-2*a*c,		2*c*d+2*a*b,	a*a-b*b-c*c+d*d,0],
-		[	0,			0,		0,		1]])
+                [	2*b*c+2*a*d,		a*a-b*b+c*c-d*d,2*c*d-2*a*b,	0],
+                [	2*b*d-2*a*c,		2*c*d+2*a*b,	a*a-b*b-c*c+d*d,0],
+                [	0,			0,		0,		1]])
+
+  def align(x,y,z):
+      n=norm(x,y,z)
+      v1=matrix([x,y,z])
+      if x/n < 0.5:
+         v2=cross(v1,e1)
+         v2=v2/norm(v2)
+         v3=cross(v1,v2)
+      else:
+         v2=cross(v1,e2)
+         v2=v2/norm(v2)
+         v3=cross(v1,v2)
+      return vstack((v1,v2,v3)).T
+
+  def norm(x,y=None,z=None):
+      return norms(x,y,z)
+
+  def norms(x,y=None,z=None):
+      if y==None:
+         return x[0]**2+y[1]**2+z[2]**2
+      else:
+         return x**2+y**2+z**2
     
 from variables import update_context
 
