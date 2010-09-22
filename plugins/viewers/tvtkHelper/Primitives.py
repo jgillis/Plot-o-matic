@@ -488,10 +488,10 @@ class Trace(FadePolyLine):
      FadePolyLine.__init__(self,*args,**kwargs)
      
    def _point_changed(self,new):
-    #todo: fixme
-     if hasattr(self,'Ex_point'):
-       expression=self.Ex_point
-       self.points=expression.get_array(first=-self.length)
+     expression=self.getExpression('point')
+     if expression==None:
+       return
+     self.points=expression.get_array(first=-self.length)
 
 class ProjectedPolyLine(Primitive):
 	watch=Instance(PolyLine)

@@ -313,6 +313,12 @@ class HasExpressionTraits(HasTraits):
 					self.__dict__[TraitsCache + k].update()
 				else:
 					setattr(self,k,v.handler.default_value)
+					
+	def getExpression(self,name):
+		if (self.__dict__.has_key(TraitsCache + name)):
+			return self.__dict__[TraitsCache + name].expression
+		else:
+			return None
 	
 class TExpressionWrapper(HasExpressionTraits):
 	parent = Instance(HasTraits)
@@ -370,3 +376,4 @@ class TExpressionWrapper(HasExpressionTraits):
 			if myprefix is '':
 				myprefix = self.name
 			setattr(delegate,myprefix,self.value)
+		self.parent.trait_property_changed( self.name, self.value, self.value )
