@@ -32,6 +32,7 @@ class VisualObject(HasExpressionTraits):
 		self.inits=(args,kwargs)
 
 	def clone(self):
+		print "cloning"  , self.__class__, " with ", self.inits
 		return self.__class__(*self.inits[0],**self.inits[1])
 
 
@@ -41,12 +42,12 @@ class Primitive(VisualObject):
   
   Each primitive takes a parent of type Frame and possible a transformation matrix T
   """
-  parent=Instance(Frame)
+  frame=Instance(Frame)
   T = TExpression(TransformationMatrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   TM = Instance(matrix)
-  variables=DelegatesTo('parent')
+  variables=DelegatesTo('frame')
   properties=PrototypedFrom('actor', 'property')
   lag=Int(0)
   e=eye(4)
@@ -68,12 +69,12 @@ class Primitive(VisualObject):
     HasTraits.__init__(self)		#magic by fnoble
     for a in args:
       if isinstance(a,Frame):
-        self.parent=a
+        self.frame=a
       if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,matrix):
         self.T=a
     for k,v in kwargs.items():
       if k == 'frame':
-        self.parent=v
+        self.frame=v
       elif len(self.trait_get(k))>0:
          #self.trait_set({k:v})
          setattr(self,k,v)
@@ -89,8 +90,8 @@ class Primitive(VisualObject):
       else :
          print "unknown argument", k , v
 
-    if not(self.parent):
-      raise Exception('All primitives must have a parent', 'All primitives must have a parent')
+    if not(self.frame):
+      raise Exception('All primitives must have a frame', 'All primitives must have a frame')
          
   def __init__(self,**kwargs):
     self.tm=tvtk.Matrix4x4()
@@ -100,6 +101,7 @@ class Primitive(VisualObject):
       """
       This method is called when plot-o-matic receives new data
       """
+      print "called upodate", self.__class__
       if pre is None:
         pre=self.e
       if post is None:
@@ -108,13 +110,13 @@ class Primitive(VisualObject):
       TMt=None
       if hasattr(self,'T'):
         if self.T !=None :
-          p = self.parent.evalT(self.lag)
+          p = self.frame.evalT(self.lag)
           if p!=None:
             TMt=matrix(p*self.T)
           else:
              return
       else:
-        p=self.parent.evalT(self.lag)
+        p=self.frame.evalT(self.lag)
         if p!=None:
           TMt=matrix(p)
         else:
@@ -176,7 +178,7 @@ class Cone(Primitive):
   radius= TExpression(DelegatesTo('source'))
   resolution= TExpression(DelegatesTo('source'))
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'height'),
     Item(name = 'radius'),
@@ -210,7 +212,7 @@ class Box(Primitive):
   z_length=TExpression(DelegatesTo('source'))
 
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'x_length', style = 'custom'),
     Item(name = 'y_length', style = 'custom'),
@@ -245,7 +247,7 @@ class Axes(Primitive):
   sides=PrototypedFrom('tube','number_of_sides')
   
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'properties',editor=InstanceEditor(), label = 'Render properties'),
     title = 'Axes properties'
@@ -265,7 +267,7 @@ class Cylinder(Primitive):
   radius= TExpression(DelegatesTo('source'))
   resolution= TExpression(DelegatesTo('source'))
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'height'),
     Item(name = 'radius'),
@@ -286,7 +288,7 @@ class Sphere(Primitive):
   theta_resolution=DelegatesTo('source')
   phi_resolution=DelegatesTo('source')
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'radius'),
     Item(name = 'theta_resolution'),
@@ -312,7 +314,7 @@ class Arrow(Primitive):
    point1=TExpression(NumpyArray)
    point2=TExpression(NumpyArray)
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'from',style = 'custom'),
     Item(name = 'to',style = 'custom'),
     Item(name = 'tip_resolution'),
@@ -332,7 +334,7 @@ class Arrow(Primitive):
 class Plane(Primitive):
    source=Instance(tvtk.PlaneSource)
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     Item(name = 'source', editor=InstanceEditor(), label = 'Geometric properties'),
@@ -350,7 +352,7 @@ class Line(Primitive):
    point1=TExpression(DelegatesTo('source'))
    point2=TExpression(DelegatesTo('source'))
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'point1', style = 'custom'),
     Item(name = 'point2', style = 'custom'),
@@ -370,7 +372,7 @@ class ProjectedPoint(Line):
   point1=None
   point2=None
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'point', style = 'custom'),
     Item(name = 'source', editor=InstanceEditor(), label = 'Source properties'),
@@ -400,7 +402,7 @@ class PolyLine(Primitive):
    source=Instance(tvtk.PolyData)
    points=Instance(ndarray)
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
    )
@@ -431,7 +433,7 @@ class FadePolyLine(PolyLine):
    color=ColorTrait((1,1,1))
 
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'color'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Line properties'
@@ -461,7 +463,7 @@ class Circle(PolyLine):
    resolution=Int(100)
    points=Instance(ndarray)
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'radius', style = 'custom'),
     Item(name = 'resolution'),
@@ -487,7 +489,7 @@ class Trace(FadePolyLine):
    length = Int(0)
    
    traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'length'),
     Item(name = 'point', style = 'custom'),
     Item(name = 'color'),
@@ -551,7 +553,7 @@ class ProjectedPolyLine(Primitive):
 class Text(Primitive):
   text=DelegatesTo('source')
   traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'text'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
@@ -569,7 +571,7 @@ class Image(Primitive):
     source=Instance(ImageReader)
     file=DelegatesTo('source',prefix='base_file_name')
     traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'file'),
     Item(name = 'source', editor=InstanceEditor()),
@@ -588,7 +590,7 @@ class ImageHeightMap(Primitive):
     file=DelegatesTo('source',prefix='base_file_name')
     warper= Instance( tvtk.WarpScalar)
     traits_view = View(
-    Item(name = 'parent', label='Frame'),
+    Item(name = 'frame', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
     Item(name = 'file'),
     Item(name = 'warper', editor=InstanceEditor()),
@@ -636,6 +638,7 @@ class PrimitiveCollection(VisualObject):
     return self.primitives
     
   def __init__(self,frame,T=None,**kwargs):
+    print "initialised with" , frame, T , kwargs
     self.frame=frame
     VisualObject.__init__(self,frame,T=T,**kwargs)
     if not(T is None):
