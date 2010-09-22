@@ -280,13 +280,14 @@ class TExpressionInstance(Instance):
 		self.default_value=mytrait.default_value
 				
 	def set(self,object,name,value):
+		print name, value
 		W= None
 		if (object.__dict__.has_key(TraitsCache + name)):
 			W= object.__dict__[TraitsCache + name]
 		else :
 			W=TExpressionWrapper()
 			self.set_value(object,name,W)
-			W.initialize(object,object.variables,self.mytrait,name)
+			W.initialize(object,self.mytrait,name)
 		W.set(value)
 		return value
 		
@@ -309,11 +310,11 @@ class HasExpressionTraits(HasTraits):
 				if (self.__dict__.has_key(TraitsCache + k)):
 					self.__dict__[TraitsCache + k].update()
 				else:
-					setattr(self,k,v.handler.default_value);
+					setattr(self,k,v.handler.default_value)
 	
 class TExpressionWrapper(HasExpressionTraits):
 	parent = Instance(HasTraits)
-	variables = Instance(Variables)
+	variables = DelegatesTo('parent')
 	expression = Instance(Expression)
 	_expr = DelegatesTo('expression')
 	is_initialized = Bool(False)
@@ -324,9 +325,8 @@ class TExpressionWrapper(HasExpressionTraits):
 
 	view = View(Item('_expr', show_label = False, editor=TextEditor(enter_set=True, auto_set=True)))
 	
-	def initialize(self,parent,variables,trait,name):
+	def initialize(self,parent,trait,name):
 		self.parent = parent
-		self.variables = variables
 		self.mytrait   = trait
 		self.is_initialized   = True
 		self.name = name
