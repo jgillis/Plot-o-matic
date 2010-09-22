@@ -668,6 +668,7 @@ class Strobe(PrimitiveCollection):
 	length=Int(10)
 	step=Int(1)
 	template=Instance(VisualObject)
+	variables=DelegatesTo('template')
 	
 	traits_view = View(
 	    Item(name = 'length'),
@@ -687,14 +688,19 @@ class Strobe(PrimitiveCollection):
 		
 	def setup(self):
 		if hasattr(self,'scene'):
+			print "setup requested"
 			self.remove_from_scene()
-			for lag in range(0,length*step,step):
+			for lag in range(0,self.length*self.step,self.step):
 				cl=Lag(self.template,lag)
 				self.add(cl)
-			self.add_to_scene(self.scene)
+				cl.add_to_scene(self.scene)
+			
+	def add_to_scene(self,sc):
+		self.scene=sc
+		self.setup()
 	
 def Lag(shape,lag):
-	cl=shape
+	cl=shape.clone()
 	cl.setall('lag',lag)
 	return cl
 		
