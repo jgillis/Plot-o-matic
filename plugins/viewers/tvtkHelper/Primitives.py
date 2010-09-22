@@ -623,6 +623,7 @@ class PrimitiveCollection(VisualObject):
   frame=Instance(Frame)
   variables=DelegatesTo('frame')
   e=eye(4)
+  lag=Int(0)
   
   traits_view = View(
     Item(name = 'frame', label='Frame'),
@@ -670,7 +671,8 @@ class PrimitiveCollection(VisualObject):
        self.primitives=[]
        
   def setall(self,attr,value):
-       map(lambda x: setattr(x,attr,value),self.primitives)
+       setattr(self,attr,value)
+       map(lambda x: x.setall(attr,value),self.primitives)
 
 
 class Strobe(PrimitiveCollection):
