@@ -335,6 +335,18 @@ class TExpressionWrapper(HasExpressionTraits):
 
 	view = View(Item('name', show_label = False, editor=TextEditor(enter_set=True, auto_set=True)))
 	
+	
+	def  handle_delegates(self):
+		if self.value is Undefined or self.value is None:
+			return
+		self.parent.trait_property_changed( self.name, self.value, self.value )
+		if (isinstance(self.mytrait, DelegatesTo)):
+			delegate=getattr(self.parent,self.mytrait.delegate)
+			myprefix=self.mytrait.prefix
+			if myprefix is '':
+				myprefix = self.name
+			setattr(delegate,myprefix,self.value)
+	
 	def initialize(self,parent,trait,name):
 		self.parent = parent
 		self.mytrait   = trait
@@ -351,6 +363,7 @@ class TExpressionWrapper(HasExpressionTraits):
 		else:
 			self.value = value
 			self.is_pure = True
+		self.handle_delegates()
 			
 	def get(self):
 		if (self.is_pure):
@@ -369,10 +382,5 @@ class TExpressionWrapper(HasExpressionTraits):
 		self.value = self.get()
 		if self.value is Undefined or self.value is None:
 			return
-		if (isinstance(self.mytrait, DelegatesTo)):
-			delegate=getattr(self.parent,self.mytrait.delegate)
-			myprefix=self.mytrait.prefix
-			if myprefix is '':
-				myprefix = self.name
-			setattr(delegate,myprefix,self.value)
-		self.parent.trait_property_changed( self.name, self.value, self.value )
+		self.handle_delegates()
+
