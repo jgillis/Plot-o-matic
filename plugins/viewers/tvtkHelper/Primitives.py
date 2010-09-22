@@ -499,19 +499,23 @@ class ProjectedPolyLine(Primitive):
 	watchTM=DelegatesTo('watch',prefix='TM')
 	pd=Instance(tvtk.PolyData)
 	polypoints=DelegatesTo('pd',prefix='points')
-	polys=DelegatesTo('pd')
+	lines=DelegatesTo('pd')
+	
+	color=DelegatesTo('properties')
 	
 	traits_view = View(
 	 Item(name = 'watch', editor=InstanceEditor()),
+	 Item(name = 'color'),
 	 Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
 	 title = 'ProjectedPolyLine properties'
 	)
 	def __init__(self,*args,**kwargs):
 		Primitive.__init__(self,**kwargs)
-		self.pd=tvtk.PolyData()
+		self.pd = tvtk.PolyData()
 		self.mapper = tvtk.PolyDataMapper(input=self.pd)
 		self.actor = tvtk.Actor(mapper=self.mapper)
 		self.handle_arguments(*args,**kwargs)
+		self.properties.representation='wireframe'
 		
 	def _watchpoints_changed(self,new):
 		self.calc()
@@ -528,7 +532,8 @@ class ProjectedPolyLine(Primitive):
 				n=q[:,3]
 				q=q[:,0:3]/(vstack((n,n,n)).T+0.0)
 			self.polypoints=hstack((q,map(project,q))).reshape((q.shape[0]*2,3))
-			self.polys=array([[i*2,2*i+1,2*i+3,2*i+2] for i in range(q.shape[0]-1)])
+			#self.polys=array([[i*2,2*i+1,2*i+3,2*i+2] for i in range(q.shape[0]-1)])
+			self.lines=array([[i*2,2*i+1] for i in range(q.shape[0]-1)])
 
 
      
