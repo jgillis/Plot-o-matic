@@ -288,6 +288,7 @@ class TExpressionInstance(Instance):
 			self.set_value(object,name,W)
 			W.initialize(object,self.mytrait,name)
 		W.set(value)
+		object.trait_property_changed( name, value, value )
 		return value
 		
 	validate=set
