@@ -7,7 +7,7 @@ from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
 from enthought.tvtk.api import tvtk
 from plugins.viewers.tools3D.Frame import *
 
-from numpy import array, ndarray, linspace, zeros, eye, matrix, zeros, arange, linspace, hstack, vstack, ndarray
+from numpy import array, ndarray, linspace, zeros, eye, matrix, zeros, ones, arange, linspace, hstack, vstack, ndarray
 # actor inherits from Prop3D
 
 import colorsys
@@ -469,7 +469,7 @@ class Circle(PolyLine):
      
    def calc(self):
      t=linspace(0,6.29,self.resolution)
-     if not(self.radius is Undefined) :
+     if not(self.radius is Undefined or self.radius is None) :
      	self.points = array([self.radius*sin(t),self.radius*cos(t),zeros(t.shape)]).T
 
 class Trace(FadePolyLine):
@@ -477,7 +477,7 @@ class Trace(FadePolyLine):
    length = Int(0)
    
    traits_view = View(
-    Item(name = 'Frame', label='Frame'),
+    Item(name = 'parent', label='Frame'),
     Item(name = 'length'),
     Item(name = 'point', style = 'custom'),
     Item(name = 'color'),
