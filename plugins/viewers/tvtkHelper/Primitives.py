@@ -56,8 +56,8 @@ class Primitive(VisualObject):
       elif len(self.properties.trait_get(k))>0:
          if k=="color" and isinstance(v,str):
            self.properties.color=getattr(colors,v)
-           return
-         setattr(self.properties,k,v)
+         else:
+           setattr(self.properties,k,v)
       elif len(self.source.trait_get(k))>0:
          setattr(self.source,k,v)
       else :
