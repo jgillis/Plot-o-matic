@@ -650,7 +650,10 @@ class PrimitiveCollection(VisualObject):
         pre=self.e
       if post is None:
         post=self.e
-      map(lambda x: x.update(pre=pre*self.T,post=post),self.primitives)
+      if self.T is None:
+        map(lambda x: x.update(pre=pre,post=post),self.primitives)
+      else:
+        map(lambda x: x.update(pre=pre*self.T,post=post),self.primitives)
 
   def add_to_scene(self,sc):
        self.scene=sc

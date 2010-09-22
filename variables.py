@@ -365,6 +365,7 @@ class TExpressionWrapper(HasExpressionTraits):
 		else:
 			self.value = value
 			self.is_pure = True
+		self.value = self.get()
 		self.handle_delegates()
 			
 	def get(self):
@@ -382,7 +383,5 @@ class TExpressionWrapper(HasExpressionTraits):
 		if (self.is_pure):
 			return
 		self.value = self.get()
-		if self.value is Undefined or self.value is None:
-			return
 		self.handle_delegates()
 
