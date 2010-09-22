@@ -241,7 +241,7 @@ class Axes(Primitive):
     title = 'Axes properties'
   )
   def __init__(self,*args,**kwargs):
-    Primitive.__init__(self,*kwargs)
+    Primitive.__init__(self,**kwargs)
     self.source = tvtk.Axes(symmetric=1)
     self.tube = tvtk.TubeFilter(vary_radius='vary_radius_off',input=self.source.output)
     self.mapper = tvtk.PolyDataMapper(input=self.tube.output)
@@ -264,7 +264,7 @@ class Cylinder(Primitive):
     title = 'Cylinder properties'
   )
   def __init__(self,*args,**kwargs):
-    Primitive.__init__(self,*kwargs)
+    Primitive.__init__(self,**kwargs)
     self.source = tvtk.CylinderSource()
     self.mapper = tvtk.PolyDataMapper(input=self.source.output)
     self.actor = tvtk.Actor(mapper=self.mapper)
