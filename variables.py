@@ -280,7 +280,6 @@ class TExpressionInstance(Instance):
 		self.default_value=mytrait.default_value
 				
 	def set(self,object,name,value):
-		print name, value
 		W= None
 		if (object.__dict__.has_key(TraitsCache + name)):
 			W= object.__dict__[TraitsCache + name]
@@ -326,7 +325,7 @@ class TExpressionWrapper(HasExpressionTraits):
 	value = Any
 	name =Str
 
-	view = View(Item('_expr', show_label = False, editor=TextEditor(enter_set=True, auto_set=True)))
+	view = View(Item('name', show_label = False, editor=TextEditor(enter_set=True, auto_set=True)))
 	
 	def initialize(self,parent,trait,name):
 		self.parent = parent

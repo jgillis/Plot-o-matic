@@ -64,7 +64,6 @@ class Primitive(VisualObject):
       if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,matrix):
         self.T=a
     for k,v in kwargs.items():
-      print k,v
       if k == 'frame':
         self.parent=v
       elif len(self.trait_get(k))>0:
