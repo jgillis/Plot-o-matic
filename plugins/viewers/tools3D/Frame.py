@@ -37,8 +37,10 @@ class Frame(HasTraits):
   )
   
   def evalT(self,lag=0):
-    if self.T.get_historic_value(lag)!=None and self.parent.evalT(lag)!=None:
-      return self.parent.evalT(lag)*self.T.get_historic_value(lag)
+    A = self.T.get_historic_value(lag)
+    B = self.parent.evalT(lag)
+    if A!=None and B!=None:
+      return B*A
     else:
       return None
 
