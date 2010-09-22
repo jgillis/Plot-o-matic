@@ -228,24 +228,6 @@ def TExpression(mytrait):
 		return TExpressionTraitDelegatesTo(mytrait.delegate,mytrait.prefix)
 	else:
 		return TExpressionTrait(mytrait)
-
-#Possibly we need this to do cloning
-class ExpressionTraitListener(HasTraits):
-	def Echanged(self, new):
-		setattr(self,self.name,new)
-		
-	def changed(self, new):
-		print self.name + "=" ,  new
-		self.object.changed(self.name,new)
-		
-	def __init__(self,object,name):
-		self.name = name
-		self.object=object
-		setattr(self,'_E_' + name + '_changed',self.Echanged)
-		print "registering " +'_E_' + name + '_changed'
-		print "registering " +'_' + name + '_changed'
-		setattr(self,'_' +  name + '_changed',self.changed)
-
 		
 class TExpressionTrait(TraitType):
 	def validate(self,object,name,value):
