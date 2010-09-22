@@ -204,6 +204,8 @@ class Expression(HasTraits):
     return self._vars._eval_expr(self._expr)
     
   def get_historic_value(self,lag):
+    if lag==0:
+        return self.get_curr_value()
     if len(self._vars.vars_list) > lag:
         vars_pool = self._vars.vars_list[-lag-1]
         return self._vars._eval_expr(self._expr,vars_pool)
