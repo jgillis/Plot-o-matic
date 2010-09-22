@@ -45,8 +45,11 @@ class Primitive(VisualObject):
   properties=PrototypedFrom('actor', 'property')
   lag=Int(0)
   e=eye(4)
+  
+  
   #This should also add delegated trait objects.
   def handle_arguments(self,*args,**kwargs): 
+    self.inits=(args,kwargs)
     """
     Do smart handling of keyword arguments
     
@@ -141,6 +144,9 @@ class Primitive(VisualObject):
        Used by PrimitiveCollection to set a property to a whole tree of VisualObjects
        """
        setattr(self,attr,value)
+       
+  def clone(self):
+      return self.__class__(*self.inits[0],**self.inits[1])
        
 class Cone(Primitive):
   """
