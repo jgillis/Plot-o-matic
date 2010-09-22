@@ -50,16 +50,16 @@ class Primitive(VisualObject):
         self.parent=v
       elif len(self.trait_get(k))>0:
          #self.trait_set({k:v})
-         self.__setattr__(k,v)
+         setattr(self,k,v)
       elif len(self.actor.trait_get(k))>0:
-         self.actor.__setattr__(k,v)
+         setattr(self.actor,k,v)
       elif len(self.properties.trait_get(k))>0:
          if k=="color" and isinstance(v,str):
            self.properties.color=getattr(colors,v)
            return
-         self.properties.__setattr__(k,v)
+         setattr(self.properties,k,v)
       elif len(self.source.trait_get(k))>0:
-         self.source.__setattr__(k,v)
+         setattr(self.source,k,v)
       else :
          print "unknown argument", k , v
 
@@ -78,10 +78,10 @@ class Primitive(VisualObject):
       HasExpressionTraits.update(self)
       TMt=None
       if hasattr(self,'T'):
-        if self.E_T !=None :
+        if self.T !=None :
           p = self.parent.evalT(self.lag)
           if p!=None:
-            TMt=matrix(p*self.E_T)
+            TMt=matrix(p*self.T)
           else:
              return
       else:
@@ -309,11 +309,11 @@ class ProjectedPoint(Line):
   def __init__(self,*args,**kwargs):
     Line.__init__(self,*args,**kwargs)
     
-  def _E_point_changed(self,new):
-    if self.E_point is Undefined:
+  def _point_changed(self,new):
+    if self.point is Undefined:
       pass
-    self.source.point2=[self.E_point[0],self.E_point[1],0]
-    self.source.point1=self.E_point
+    self.source.point2=[self.point[0],self.point[1],0]
+    self.source.point1=self.point
 
 
 
@@ -394,7 +394,7 @@ class Circle(PolyLine):
    def __init__(self,*args,**kwargs):
      PolyLine.__init__(self,*args,**kwargs)
      
-   def _E_radius_changed(self):
+   def _radius_changed(self):
      self.calc()
      
    def _resolution_changed(self):
@@ -402,8 +402,8 @@ class Circle(PolyLine):
      
    def calc(self):
      t=linspace(0,6.29,self.resolution)
-     if not(self.E_radius is Undefined) :
-     	self.points = array([self.E_radius*sin(t),self.E_radius*cos(t),zeros(t.shape)]).T
+     if not(self.radius is Undefined) :
+     	self.points = array([self.radius*sin(t),self.radius*cos(t),zeros(t.shape)]).T
 
 class Trace(FadePolyLine):
    point=TExpression(NumpyArray)
@@ -420,7 +420,8 @@ class Trace(FadePolyLine):
    def __init__(self,*args,**kwargs):
      FadePolyLine.__init__(self,*args,**kwargs)
      
-   def _E_point_changed(self,new):
+   def _point_changed(self,new):
+    #todo: fixme
      if hasattr(self,'Ex_point'):
        expression=self.Ex_point
        self.points=expression.get_array(first=-self.length)
@@ -547,7 +548,7 @@ class PrimitiveCollection(VisualObject):
         pre=self.e
       if post is None:
         post=self.e
-      map(lambda x: x.update(pre=pre*self.E_T,post=post),self.primitives)
+      map(lambda x: x.update(pre=pre*self.T,post=post),self.primitives)
 
   def add_to_scene(self,sc):
        self.scene=sc

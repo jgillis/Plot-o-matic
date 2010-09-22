@@ -1,4 +1,4 @@
-from enthought.traits.api import HasTraits, Int, Float, Dict, List, Property, Enum, Color, Instance, Str, Any, on_trait_change, Event, Button, TraitType, DelegatesTo
+from enthought.traits.api import HasTraits, Int, Float, Dict, List, Property, Enum, Color, Instance, Str, Any, on_trait_change, Event, Button, TraitType, DelegatesTo, Bool
 from enthought.traits.ui.api import View, Item, ValueEditor, TabularEditor, HSplit, TextEditor
 from enthought.traits.trait_base import Undefined
 from enthought.traits.ui.tabular_adapter import TabularAdapter
@@ -221,151 +221,150 @@ class Expression(HasTraits):
       self._data_array_cache_index = last
 
     return self._data_array_cache[first:last,...]
+    
+# http://code.enthought.com/projects/files/ETS31_API/enthought.traits.trait_types.Instance.html
+# set_value is the magic word
 
-		
-def TExpression(mytrait):
-	if isinstance(mytrait,DelegatesTo):
-		return TExpressionTraitDelegatesTo(mytrait.delegate,mytrait.prefix)
-	else:
-		return TExpressionTrait(mytrait)
-		
-class TExpressionTrait(TraitType):
-	def validate(self,object,name,value):
-		return value
-		
-	def __init__(self,mytrait):
-		self.mytrait=mytrait
-		if hasattr(mytrait,'default_value'):
-			self.default_value=mytrait.default_value
-		TraitType.__init__(self)
+"""
+
+TExpression
+
+class Foo(HasExpressionTraits)
+	bar=TExpression(Float)
+	baz=Float
 	
-	def get_editor(self,object):
-		return TextEditor()
+f=Foo()
 
-class TExpressionTraitDelegatesTo(TraitType):
-	def __init__(self,delegate,prefix):
-		self.delegate=delegate
-		self.prefix=prefix
-		TraitType.__init__(self)
+f.bar = 'time'     or  f.bar = variables.new_expression('time')
+print f.bar -> returns the time
 
-	def validate(self,object,name,value):
+f.bar = 3
+print f.bar -> returns 3, quickly
+
+When editing, we see the expression's string value
+
+class Bar(HasExpressionTraits)
+	foo = Instance(Foo)
+	baz= DelegatesTo("foo")
+	
+b=Bar()
+
+b.baz = 'time'
+f.baz will now contain the time
+
+How TEpression works
+
+The main idea is to have an object that stores your data (Expression, value, ...) called TExpressionWrapper.
+When getting, setting or editing the TExpression, we should have the possibility to add a layer of functionality.
+That's why we have a TExpressionInstance traittype that overwrites default set, get, validate methods
+The trick here is in set. You cannot possible do:
+    'object.__dict__[name] =value'  as this will kill the get/set functionality
+    'setattr(object,name,value)' as this will cause an infinite recursion
+    
+Add this point, the user should be able to write:
+TExpressionInstance(TExpressionWrapper,mytrait)
+
+However, we introduce a layer of syntax sugar so you can write TExpression(mytrait) instead
+
+Lastly, to receives updates from plot-o-matic, the user has to update all expression traits.
+We introduce a class HasExpressionTraits which takes care of this when called with HasExpressionTraits.update(self)
+
+"""
+
+
+TraitsCache ="_traits_cache_"
+class TExpressionInstance(Instance):
+	def __init__(self,myclass, mytrait):
+		Instance.__init__(self,myclass)
+		self.mytrait=mytrait
+		self.default_value=mytrait.default_value
+				
+	def set(self,object,name,value):
+		W= None
+		if (object.__dict__.has_key(TraitsCache + name)):
+			W= object.__dict__[TraitsCache + name]
+		else :
+			W=TExpressionWrapper()
+			self.set_value(object,name,W)
+			W.initialize(object,object.variables,self.mytrait,name)
+		W.set(value)
 		return value
 		
-	def get_editor(self,object):
-		return TextEditor()
-			
+	validate=set
+		
+	def get(self,object,name):
+		if (object.__dict__.has_key(TraitsCache + name)):
+			return object.__dict__[TraitsCache + name].get()
+	
+
+def TExpression(mytrait):
+	return TExpressionInstance(TExpressionWrapper,mytrait)
+		
 class HasExpressionTraits(HasTraits):
 	lag=Int(0)
 	global TExpression
 	def update(self):
-		if not(hasattr(self,'_expressionDict')):
-			self._expressionDict=dict()
 		for k,v in self.traits().items():
-			if isinstance(v.handler,TExpressionTrait) or isinstance(v.handler,TExpressionTraitDelegatesTo) :
-				if not(self._expressionDict.has_key(k)):
-					self._expressionDict[k]=dict()
-				if isinstance(v.handler,TExpressionTrait) :
-					self.updateExpressionTrait(k,v.handler)
-				if isinstance(v.handler,TExpressionTraitDelegatesTo) :
-					self.updateExpressionTraitDelegatesTo(k,v.handler)
-		
-	def updateExpressionTrait(self,name,handler):
-		#print "updating updateExpressionTrait"
-		if not(self._expressionDict[name].has_key('hasmeta')):
-			self._expressionDict[name]['hasmeta']=True
-			try:
-				self.add_class_trait('E_'+name,handler.mytrait)
-
-				#print "added meta trait"
-			except Exception as e:
-				#print e
-				pass
-			#try:
-			#	#en=ExpressionTraitListener(self,name))
-			#	#self.add_trait_listener(ExpressionTraitListener(self,name))
-			#	#self._on_trait_change(lambda s,n: self.Echanged(name,n), 'E_'+name)
-			#	#self._on_trait_change(lambda s,n: self.changed(name,n),name)
-			#	#print "Added listener for "+ 'E_'+name
-			#except Exception as e:
-			#	#print e
-			#	pass
-				
-		self.updateExpressionTraitAll(name,handler)
-		
-	def updateExpressionTraitDelegatesTo(self,name,handler):
-		#print "updating updateExpressionTraitDelegatesTo"
-		if not(self._expressionDict[name].has_key('hasmeta')):
-			self._expressionDict[name]['hasmeta']=True
-			try:
-				myprefix=handler.prefix
-				if myprefix is '':
-					myprefix = name
-				self.add_class_trait('E_'+name,DelegatesTo(handler.delegate,prefix=myprefix))
-				#print "added meta trait delegation " + handler.delegate + " -> " + myprefix
-			except Exception as e:
-				#print e
-				pass
-			#try:
-			#	#self.add_trait_listener(ExpressionTraitListener(self,name))
-			#	#self._on_trait_change(lambda s,n: self.Echanged(name,n), 'E_'+name)
-			#	#self._on_trait_change(lambda s,n: self.changed(name,n),name)
-			#	print "Added listener for " + 'E_'+name
-			#except Exception as e:
-			#	#print e
-			#	pass
-			
-		self.updateExpressionTraitAll(name,handler)
+			if isinstance(v.handler,TExpressionInstance) :
+				if (self.__dict__.has_key(TraitsCache + k)):
+					self.__dict__[TraitsCache + k].update()
+				else:
+					setattr(self,k,v.handler.default_value);
 	
-	def updateExpressionTraitAll(self,name,handler):
-		input = getattr(self,name)
-		#print name + " input: ", input
-		#if self._expressionDict[name].has_key('Ecache'):
-		#	if not(self._expressionDict[name]['Ecache'] != getattr(self,'E_'+name)):
-		#		print "Forcing a refresh"
-		#		self._expressionDict[name]['Ecache']=getattr(self,'E_'+name)
-		#		if self._expressionDict[name].has_key('expression'):
-		#			del self._expressionDict[name]['expression']
-		#		setattr(self,name,getattr(self,'E_'+name))
-		#		print "attr " + name + " set to", getattr(self,'E_'+name)
-		#		return
-		flag=False
+class TExpressionWrapper(HasExpressionTraits):
+	parent = Instance(HasTraits)
+	variables = Instance(Variables)
+	expression = Instance(Expression)
+	_expr = DelegatesTo('expression')
+	is_initialized = Bool(False)
+	myTrait = Any
+	is_pure = Bool(True)
+	value = Any
+	name =Str
+
+	view = View(Item('_expr', show_label = False, editor=TextEditor(enter_set=True, auto_set=True)))
+	
+	def initialize(self,parent,variables,trait,name):
+		self.parent = parent
+		self.variables = variables
+		self.mytrait   = trait
+		self.is_initialized   = True
+		self.name = name
+		
+	def set(self,value):
+		if (self.is_expr_string(value)):
+			self.expression=self.variables.new_expression(value)
+			self.is_pure = False
+		elif (isinstance(value,Expression)):
+			self.expression = value
+			self.s_pure = False
+		else:
+			self.value = value
+			self.is_pure = True
+			
+	def get(self):
+		if (self.is_pure):
+			return self.value
+		else:
+			if hasattr(self.parent,'lag') or self.lag==0:
+				return self.expression.get_historic_value(self.lag)
+			else:
+				return self.expression.get_current_value()
+			
+	def is_expr_string(self,input):
 		if isinstance(input,str) or isinstance(input,unicode):
-			flag=True
-			if self._expressionDict[name].has_key('expression'):
-				#todo
-				self._expressionDict[name]['expression'].set_expr(input)
-			else :
-				self._expressionDict[name]['expression']=self.variables.new_expression(input)
-		elif isinstance(input,Expression):
-			flag=True
-			self._expressionDict[name]['expression']=input
-		else :
-			output=input
+			return True
+		return False
 		
-		if flag:
-			setattr(self,'Ex_'+name,self._expressionDict[name]['expression'])
-			output=self._expressionDict[name]['expression'].get_historic_value(self.lag)
-			
-
-
-		if not(output is None or output is Undefined):
-			try:
-				setattr(self,'E_'+name,output)
-				#self._expressionDict[name]['Ecache']=output
-				#print "Set output to ", output
-			except Exception as e:
-				print e
-		
-		#if output is None or output == output==Undefined:
-		#	print "hy"
-		#	setattr(self,name,handler.default_value)
-		#	setattr(self,'E_'+name,handler.default_value)
-			
-	def changed(self,name,value):
-		pass
-		#print "We registered a change: " , name , " - " , value
-		
-	def Echanged(self,name,value):
-		#print "We registered a change: " , name , " - " , value
-		setattr(self,name,value)
-		
+	def update(self):
+		if (self.is_pure):
+			return
+		self.value = self.get()
+		print self.mytrait
+		if (isinstance(self.mytrait, DelegatesTo)):
+			print "I am here"
+			delegate=getattr(self.parent,self.mytrait.delegate)
+			myprefix=self.mytrait.prefix
+			if myprefix is '':
+				myprefix = self.name
+			setattr(delegate,myprefix,self.value)
