@@ -360,9 +360,9 @@ class TExpressionWrapper(HasExpressionTraits):
 		if (self.is_pure):
 			return
 		self.value = self.get()
-		print self.mytrait
+		if self.value is Undefined or self.value is None:
+			return
 		if (isinstance(self.mytrait, DelegatesTo)):
-			print "I am here"
 			delegate=getattr(self.parent,self.mytrait.delegate)
 			myprefix=self.mytrait.prefix
 			if myprefix is '':
