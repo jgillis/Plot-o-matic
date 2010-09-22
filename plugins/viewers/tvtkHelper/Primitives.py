@@ -28,7 +28,12 @@ class VisualObject(HasExpressionTraits):
 	""" 
 	A baseclass for Primitives and PrimitiveCollection
 	"""
-	pass
+	def __init__(self,*args,**kwargs):
+		self.inits=(args,kwargs)
+
+	def clone(self):
+		return self.__class__(*self.inits[0],**self.inits[1])
+
 
 class Primitive(VisualObject):
   """
@@ -48,8 +53,8 @@ class Primitive(VisualObject):
   
   
   #This should also add delegated trait objects.
-  def handle_arguments(self,*args,**kwargs): 
-    self.inits=(args,kwargs)
+  def handle_arguments(self,*args,**kwargs):
+    VisualObject.__init__(self,*args,**kwargs)
     """
     Do smart handling of keyword arguments
     
@@ -145,8 +150,7 @@ class Primitive(VisualObject):
        """
        setattr(self,attr,value)
        
-  def clone(self):
-      return self.__class__(*self.inits[0],**self.inits[1])
+
        
 class Cone(Primitive):
   """
@@ -630,7 +634,9 @@ class PrimitiveCollection(VisualObject):
   def getPrimitives(self):
     return self.primitives
     
-  def __init__(self,frame,T=None):
+  def __init__(self,frame,T=None,**kwargs):
+    self.frame=frame
+    VisualObject.__init__(self,frame,T=T,**kwargs)
     if not(T is None):
       self.T=T
     self.frame=frame
