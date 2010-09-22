@@ -17,7 +17,7 @@ from plugins.viewers.tvtkHelper.Primitives import *
 
 class TVTKViewer(Viewer):
   name = Str('TVTK Viewer')
-  primitives = List(Either(Primitive,PrimitiveCollection))
+  primitives = List(VisualObject)
   scene = Instance(SceneModel, ())
   
   view = View(

@@ -26,7 +26,10 @@ class NumpyArray(TraitType):
 
 #note: to change color, pull slider all the way accross the range
 
-class Primitive(HasExpressionTraits):
+class VisualObject(HasExpressionTraits):
+	pass
+
+class Primitive(VisualObject):
   parent=Instance(Frame)
   T = TExpression(TransformationMatrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
@@ -496,7 +499,7 @@ class Image(Primitive):
     title = 'Image properties'
     )
     def __init__(self,*args,**kwargs):
-        Primitive.__init__(self,*kwargs)
+        Primitive.__init__(self,**kwargs)
         self.source=tvtk.ImageReader(file_name="woodpecker.bmp") # im.ouput
         self.source.set_data_scalar_type_to_unsigned_char()
         #self.mapper = tvtk.ImageMapper(input=self.source.output)
@@ -512,9 +515,8 @@ class Image(Primitive):
 
 # LineSource, PlaneSource
 
-class PrimitiveCollection(HasExpressionTraits):
-  #primitives=List(Either(Primitive,This))
-  primitives=List(Instance(HasTraits))
+class PrimitiveCollection(VisualObject):
+  primitives=List(Instance(VisualObject))
   T=TExpression(TransformationMatrix)
   frame=Instance(Frame)
   variables=DelegatesTo('frame')
@@ -567,7 +569,7 @@ class PrimitiveCollection(HasExpressionTraits):
 class Strobe(PrimitiveCollection):
 	length=Int(10)
 	step=Int(1)
-	template=Either(Primitive,PrimitiveCollection)
+	template=Instance(VisualObject)
 	
 	traits_view = View(
 	    Item(name = 'length'),
