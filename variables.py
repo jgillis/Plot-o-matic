@@ -296,6 +296,9 @@ class TExpressionInstance(Instance):
 	def get(self,object,name):
 		if (object.__dict__.has_key(TraitsCache + name)):
 			return object.__dict__[TraitsCache + name].get()
+			
+	def get_editor(self,trait = None):
+		return TextEditor()
 	
 
 def TExpression(mytrait):
