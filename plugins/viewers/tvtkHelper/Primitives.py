@@ -11,27 +11,35 @@ from numpy import array, ndarray, linspace, zeros, eye, matrix, zeros, arange, l
 # actor inherits from Prop3D
 
 import colorsys
-
 from vtk.util import colors
 
 from enthought.enable.colors import ColorTrait
 from enthought.mayavi.sources.image_reader import ImageReader
 
+
 class NumpyArray(TraitType):
+	"""
+	Trait type for numpy.arrays
+	"""
 	def validate(self,object,name,value):
 		return array(value)
 
-#note: to change color, pull slider all the way accross the range
-
 class VisualObject(HasExpressionTraits):
+	""" 
+	A baseclass for Primitives and PrimitiveCollection
+	"""
 	pass
 
 class Primitive(VisualObject):
+  """
+  A primitive object is the most basic TVTK drawable object
+  
+  Each primitive takes a parent of type Frame and possible a transformation matrix T
+  """
   parent=Instance(Frame)
   T = TExpression(TransformationMatrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
-  #actor = Instance(tvtk.Actor)
   TM = Instance(matrix)
   variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
@@ -39,6 +47,16 @@ class Primitive(VisualObject):
   e=eye(4)
   #This should also add delegated trait objects.
   def handle_arguments(self,*args,**kwargs): 
+    """
+    Do smart handling of keyword arguments
+    
+    Keywords are matched against members of the following objects:
+       * The Primitive itself
+       * The Primitive's actor
+       * The Primitive's properties - rendering options
+             Typical: opacity [0,1], color "red" or  (1,0,0)
+       * The Primitive's source
+    """
     HasTraits.__init__(self)		#magic by fnoble
     for a in args:
       if isinstance(a,Frame):
@@ -46,6 +64,7 @@ class Primitive(VisualObject):
       if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,matrix):
         self.T=a
     for k,v in kwargs.items():
+      print k,v
       if k == 'frame':
         self.parent=v
       elif len(self.trait_get(k))>0:
@@ -71,6 +90,9 @@ class Primitive(VisualObject):
     pass
     
   def update(self,pre=None,post=None):
+      """
+      This method is called when plot-o-matic receives new data
+      """
       if pre is None:
         pre=self.e
       if post is None:
@@ -103,16 +125,43 @@ class Primitive(VisualObject):
          self.TM=TMt
 
   def add_to_scene(self,sc):
+       """
+       Add Primitive to a tvtk.scene
+       """
        sc.add_actors(self.actor)
        self.scene=sc
        
   def remove_from_scene(self):
+       """
+       Remove primitive from atvtk.scene
+       """      
        self.scene.remove_actors(self.actor)
 
   def setall(self,attr,value):
+       """
+       Used by PrimitiveCollection to set a property to a whole tree of VisualObjects
+       """
        setattr(self,attr,value)
        
 class Cone(Primitive):
+  """
+  Cone object
+  
+  Example usage:
+  
+  worldframe=WorldFrame()
+  Cone(worldframe,radius='time',height=2,resolution=100)
+  
+  Obligatory parameters:
+  * frame:  frame of reference
+  
+  Mayor geometric parameters:
+  
+  
+  Important non-trivial parameters:
+  * resolution is the number of polygons that is used to approximate the curved surface.
+  
+  """
   source = Instance(tvtk.ConeSource)
   height= TExpression(DelegatesTo('source'))
   radius= TExpression(DelegatesTo('source'))
@@ -135,6 +184,17 @@ class Cone(Primitive):
     self.handle_arguments(*args,**kwargs)
     
 class Box(Primitive):
+  """
+  Box object
+  
+  Example usage:
+  
+  worldframe=WorldFrame()
+  Box(worldframe,x_length='time',y_length=2)
+  
+  lengths default to 1
+  
+  """
   source = Instance(tvtk.CubeSource)
   x_length=TExpression(DelegatesTo('source'))
   y_length=TExpression(DelegatesTo('source'))
@@ -143,9 +203,9 @@ class Box(Primitive):
   traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
-    Item(name = 'x_length'),
-    Item(name = 'y_length'),
-    Item(name = 'z_length'),
+    Item(name = 'x_length', style = 'custom'),
+    Item(name = 'y_length', style = 'custom'),
+    Item(name = 'z_length', style = 'custom'),
     Item(name = 'properties',editor=InstanceEditor(), label = 'Render properties'),
     title = 'Box properties'
   )
@@ -160,6 +220,14 @@ class Box(Primitive):
     
     
 class Axes(Primitive):
+  """
+  Coordinate Axes
+  
+  Important non-trivial parameters:
+  * scale_factor
+  
+  
+  """
   source = Instance(tvtk.Axes)
   tube = Instance(tvtk.TubeFilter)
   
@@ -492,7 +560,6 @@ class Image(Primitive):
     Item(name = 'file'),
     Item(name = 'source', editor=InstanceEditor()),
     Item(name = 'actor', editor=InstanceEditor()),
-    Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Image properties'
     )
 
@@ -501,9 +568,34 @@ class Image(Primitive):
         self.source=ImageReader(base_file_name=kwargs['file']) # im.ouput
         self.actor=tvtk.ImageActor(input=self.source.reader.output)
         self.handle_arguments(*args,**kwargs)
+    
+class ImageHeightMap(Primitive):
+    source=Instance(ImageReader)
+    file=DelegatesTo('source',prefix='base_file_name')
+    warper= Instance( tvtk.WarpScalar)
+    traits_view = View(
+    Item(name = 'parent', label='Frame'),
+    Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
+    Item(name = 'file'),
+    Item(name = 'warper', editor=InstanceEditor()),
+    Item(name = 'source', editor=InstanceEditor()),
+    Item(name = 'actor', editor=InstanceEditor()),
+    title = 'Image properties'
+    )
 
-    
-    
+    def __init__(self,*args,**kwargs):
+        Primitive.__init__(self,**kwargs)
+        self.source=ImageReader(base_file_name=kwargs['file']) # im.ouput
+        self.geom=tvtk.ImageDataGeometryFilter(input=self.source.reader.get_output())
+        print self.geom.get_output().number_of_cells
+        print self.geom.get_output().number_of_lines
+        print self.geom.get_output().number_of_pieces
+        print self.geom.get_output().number_of_points
+        print self.geom.get_output().number_of_polys
+        self.warper = tvtk.WarpScalar(input=self.geom.get_output())
+        self.mapper = tvtk.PolyDataMapper(input=self.warper.output)
+        self.actor = tvtk.Actor(mapper=self.mapper)
+        self.handle_arguments(*args,**kwargs)
     
 #http://mayavi2.sourcearchive.com/documentation/3.3.0-2/actors_8py-source.html
 #source = tvtk.ArrowSource(tip_resolution=resolution,
