@@ -28,6 +28,11 @@ class VisualObject(HasExpressionTraits):
 	""" 
 	A baseclass for Primitives and PrimitiveCollection
 	"""
+	frame=Instance(Frame)
+	T = TExpression(TransformationMatrix)
+	variables=DelegatesTo('frame')
+	lag=Int(0)
+	e=eye(4)
 	def __init__(self,*args,**kwargs):
 		self.inits=(args,kwargs)
 
@@ -42,15 +47,11 @@ class Primitive(VisualObject):
   
   Each primitive takes a parent of type Frame and possible a transformation matrix T
   """
-  frame=Instance(Frame)
-  T = TExpression(TransformationMatrix)
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   TM = Instance(matrix)
-  variables=DelegatesTo('frame')
   properties=PrototypedFrom('actor', 'property')
-  lag=Int(0)
-  e=eye(4)
+
   
   
   #This should also add delegated trait objects.
@@ -621,11 +622,6 @@ class ImageHeightMap(Primitive):
 
 class PrimitiveCollection(VisualObject):
   primitives=List(Instance(VisualObject))
-  T=TExpression(TransformationMatrix)
-  frame=Instance(Frame)
-  variables=DelegatesTo('frame')
-  e=eye(4)
-  lag=Int(0)
   
   traits_view = View(
     Item(name = 'frame', label='Frame'),
