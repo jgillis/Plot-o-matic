@@ -7,11 +7,8 @@ from enthought.traits.ui.api import TreeEditor, TreeNode, View, Item, VSplit, \
 from enthought.tvtk.api import tvtk
 from plugins.viewers.tools3D.Frame import *
 
-import numpy
-from numpy import array, ndarray, linspace, zeros
+from numpy import array, ndarray, linspace, zeros, eye, matrix, zeros, arange, linspace, hstack, vstack, ndarray
 # actor inherits from Prop3D
-
-import numpy as np
 
 import colorsys
 
@@ -35,18 +32,18 @@ class Primitive(VisualObject):
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
   #actor = Instance(tvtk.Actor)
-  TM = Instance(numpy.matrix)
+  TM = Instance(matrix)
   variables=DelegatesTo('parent')
   properties=PrototypedFrom('actor', 'property')
   lag=Int(0)
-  e=np.eye(4)
+  e=eye(4)
   #This should also add delegated trait objects.
   def handle_arguments(self,*args,**kwargs): 
     HasTraits.__init__(self)		#magic by fnoble
     for a in args:
       if isinstance(a,Frame):
         self.parent=a
-      if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,numpy.matrix):
+      if isinstance(a,str) or isinstance(a,unicode) or isinstance(a,Expression) or isinstance(a,matrix):
         self.T=a
     for k,v in kwargs.items():
       if k == 'frame':
@@ -84,13 +81,13 @@ class Primitive(VisualObject):
         if self.E_T !=None :
           p = self.parent.evalT(self.lag)
           if p!=None:
-            TMt=np.matrix(p*self.E_T)
+            TMt=matrix(p*self.E_T)
           else:
              return
       else:
         p=self.parent.evalT(self.lag)
         if p!=None:
-          TMt=np.matrix(p)
+          TMt=matrix(p)
         else:
            return
       if TMt is None:
@@ -324,7 +321,7 @@ class ProjectedPoint(Line):
 # http://www.enthought.com/~rkern/cgi-bin/hgwebdir.cgi/colormap_explorer/file/a8aef0e90790/colormap_explorer/colormaps.py
 class PolyLine(Primitive):
    source=Instance(tvtk.PolyData)
-   points=Instance(numpy.ndarray)
+   points=Instance(ndarray)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
@@ -342,9 +339,9 @@ class PolyLine(Primitive):
     npoints = len(self.points)
     if npoints<2 :
       return
-    lines = np.zeros((npoints-1, 2), dtype=int)
-    lines[:,0] = np.arange(0, npoints-1)
-    lines[:,1] = np.arange(1, npoints)
+    lines = zeros((npoints-1, 2), dtype=int)
+    lines[:,0] = arange(0, npoints-1)
+    lines[:,1] = arange(1, npoints)
     self.source.points=self.points
     self.source.lines=lines
     
@@ -380,12 +377,12 @@ class FadePolyLine(PolyLine):
       
    def _points_changed(self,old, new):
     PolyLine._points_changed(self,old, new)
-    self.source.point_data.scalars=np.linspace(0,1,self.points.shape[0])
+    self.source.point_data.scalars=linspace(0,1,self.points.shape[0])
 
 class Circle(PolyLine):
    radius=TExpression(Float)
    resolution=Int(100)
-   points=Instance(numpy.ndarray)
+   points=Instance(ndarray)
    traits_view = View(
     Item(name = 'parent', label='Frame'),
     Item(name = 'T', label = 'Matrix4x4', style = 'custom'),
@@ -429,7 +426,6 @@ class Trace(FadePolyLine):
        self.points=expression.get_array(first=-self.length)
 
 class ProjectedPolyLine(Primitive):
-	from numpy import *
 	watch=Instance(PolyLine)
 	watchpoints=DelegatesTo('watch',prefix='points')
 	watchTM=DelegatesTo('watch',prefix='TM')
@@ -460,10 +456,10 @@ class ProjectedPolyLine(Primitive):
 		q=self.watchpoints
 		if not(q is Undefined or q is None):
 			if not(self.watch.TM is None):
-				q=array((self.watch.TM*np.hstack((q,np.ones((q.shape[0],1)))).T).T)
+				q=array((self.watch.TM*hstack((q,ones((q.shape[0],1)))).T).T)
 				n=q[:,3]
-				q=q[:,0:3]/(np.vstack((n,n,n)).T+0.0)
-			self.polypoints=np.hstack((q,map(project,q))).reshape((q.shape[0]*2,3))
+				q=q[:,0:3]/(vstack((n,n,n)).T+0.0)
+			self.polypoints=hstack((q,map(project,q))).reshape((q.shape[0]*2,3))
 			self.polys=array([[i*2,2*i+1,2*i+3,2*i+2] for i in range(q.shape[0]-1)])
 
 
@@ -519,7 +515,7 @@ class PrimitiveCollection(VisualObject):
   T=TExpression(TransformationMatrix)
   frame=Instance(Frame)
   variables=DelegatesTo('frame')
-  e=np.eye(4)
+  e=eye(4)
   
   traits_view = View(
     Item(name = 'frame', label='Frame'),
