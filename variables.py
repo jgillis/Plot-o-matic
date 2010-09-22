@@ -337,7 +337,7 @@ class TExpressionWrapper(HasExpressionTraits):
 			self.is_pure = False
 		elif (isinstance(value,Expression)):
 			self.expression = value
-			self.s_pure = False
+			self.is_pure = False
 		else:
 			self.value = value
 			self.is_pure = True
