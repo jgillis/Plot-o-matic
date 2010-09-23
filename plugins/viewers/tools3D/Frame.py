@@ -72,7 +72,8 @@ class WorldFrame(Frame):
     title = 'WorldFrame'
   )
 
-from numpy import matrix, sin, cos
+from numpy import matrix, sin, cos, cross, vstack, sqrt
+import numpy
 
 class FrameHelperFunctions:
   e1=matrix([1,0,0])
@@ -104,25 +105,27 @@ class FrameHelperFunctions:
                 [	0,			0,		0,		1]])
 
   def align(x,y,z):
-      n=norm(x,y,z)
-      v1=matrix([x,y,z])
-      if x/n < 0.5:
-         v2=cross(v1,e1)
-         v2=v2/norm(v2)
-         v3=cross(v1,v2)
+      v1=normalize(matrix([x,y,z]))
+      if v1[0,0] < 0.5:
+         v2=normalize(cross(v1,e1))
+         v3=normalize(cross(v1,v2))
       else:
-         v2=cross(v1,e2)
-         v2=v2/norm(v2)
-         v3=cross(v1,v2)
+         v2=normalize(cross(v1,e2))
+         v3=normalize(cross(v1,v2))
       return vstack((v1,v2,v3)).T
 
+  def normalize(x):
+      return x/(norm(x)+0.0)
+      
   def norm(x,y=None,z=None):
-      return norms(x,y,z)
+      return sqrt(norms(x,y,z))
 
   def norms(x,y=None,z=None):
-    if y is None:
+    if isinstance(x,numpy.ndarray) or isinstance(x,matrix):
+        return x[0,0]**2+x[0,1]**2+x[0,2]**2
+    elif y is None:
         return x[0]**2+x[1]**2+x[2]**2
-      else:
+    else:
         return x**2+y**2+z**2
     
 from variables import update_context
