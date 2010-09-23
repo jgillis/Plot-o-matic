@@ -37,7 +37,6 @@ class VisualObject(HasExpressionTraits):
 		self.inits=(args,kwargs)
 
 	def clone(self):
-		print "cloning"  , self.__class__, " with ", self.inits
 		return self.__class__(*self.inits[0],**self.inits[1])
 
 
@@ -46,6 +45,13 @@ class Primitive(VisualObject):
   A primitive object is the most basic TVTK drawable object
   
   Each primitive takes a parent of type Frame and possible a transformation matrix T
+  
+  Common properties of Primitives that can be set by passing keyword arguments to the constructor:
+  * T: a 4x4 homogeneous transformation matrix
+  * color : tuple (1,1,1) for white, or string keyword
+  * opacity : float [0,1]
+  * 
+  
   """
   polyDataMapper = Instance(tvtk.PolyDataMapper)
   actor = Instance(tvtk.Prop)
@@ -102,7 +108,6 @@ class Primitive(VisualObject):
       """
       This method is called when plot-o-matic receives new data
       """
-      print "called upodate", self.__class__
       if pre is None:
         pre=self.e
       if post is None:
@@ -197,6 +202,7 @@ class Cone(Primitive):
     
 class Box(Primitive):
   """
+  py:function:: Box(frame[, T=numpy.matrix, x_length=1, y_length=1, z_length=1, **common])
   Box object
   
   Example usage:
@@ -204,7 +210,7 @@ class Box(Primitive):
   worldframe=WorldFrame()
   Box(worldframe,x_length='time',y_length=2)
   
-  lengths default to 1
+ Look at the documentation of Primitive to see the other 'common' keyword options
   
   """
   source = Instance(tvtk.CubeSource)
@@ -233,7 +239,8 @@ class Box(Primitive):
     
 class Axes(Primitive):
   """
-  Coordinate Axes
+  py:function:: Axes(frame[, T=numpy.matrix])
+  Plot a coordinate Axes
   
   Important non-trivial parameters:
   * scale_factor
@@ -308,16 +315,25 @@ class Point(Sphere):
 	def __init__(self,*args,**kwargs):
 		Sphere.__init__(self,**kwargs)
 		self.radius=0.05
-		
+
 class Arrow(Primitive):
+  """
+  py:function:: Arrow(frame, axis=[1,0,0], **common)
+  
+  Plots an arrow in the 3D view
+  
+  Arguments:
+   'axis' determines the direction in which the arrow is pointing
+   'tip_resolution'  defines the resolution of the tip
+   
+  Look at the documentation of Primitive to see the other 'common' keyword options
+  """
    source=Instance(tvtk.ArrowSource)
    tip_resolution = DelegatesTo("source")
-   point1=TExpression(NumpyArray)
-   point2=TExpression(NumpyArray)
+   axis=TExpression(NumpyArray)
    traits_view = View(
     Item(name = 'frame', label='Frame'),
-    Item(name = 'from',style = 'custom'),
-    Item(name = 'to',style = 'custom'),
+    Item(name = 'axis',style = 'custom'),
     Item(name = 'tip_resolution'),
     Item(name = 'source', editor=InstanceEditor(), label = 'Geometric properties'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
@@ -330,7 +346,7 @@ class Arrow(Primitive):
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
     
-    
+
 
 class Plane(Primitive):
    source=Instance(tvtk.PlaneSource)
@@ -369,6 +385,13 @@ class Line(Primitive):
     self.handle_arguments(*args,**kwargs)
     
 class ProjectedPoint(Line):
+  """
+  py:function:: ProjectedPoint(frame, point=[0,0,0], **common)
+  Arguments:
+   'point' is a list or tuple
+   
+  Look at the documentation of Primitive to see the other 'common' keyword options
+  """
   point=TExpression(Either(List,Tuple))
   point1=None
   point2=None
@@ -400,6 +423,15 @@ class ProjectedPoint(Line):
 # The following code is mainly from 
 # http://www.enthought.com/~rkern/cgi-bin/hgwebdir.cgi/colormap_explorer/file/a8aef0e90790/colormap_explorer/colormaps.py
 class PolyLine(Primitive):
+   """
+   py:function::  PolyLine(frame, points=array, **common)
+   
+   Plots a line specified by a numpy array
+   
+   Look at the documentation of Primitive to see the other 'common' keyword options
+   
+   """
+   
    source=Instance(tvtk.PolyData)
    points=Instance(ndarray)
    traits_view = View(
@@ -460,6 +492,14 @@ class FadePolyLine(PolyLine):
     self.source.point_data.scalars=linspace(0,1,self.points.shape[0])
 
 class Circle(PolyLine):
+  """
+  py:function:: Circle(frame, radius=1, resolution=100, **common)
+ 
+  Plots a circle in the 3D view
+   
+  Look at the documentation of Primitive to see the other 'common' keyword options
+  
+  """
    radius=TExpression(Float)
    resolution=Int(100)
    points=Instance(ndarray)
@@ -486,6 +526,22 @@ class Circle(PolyLine):
      	self.points = array([self.radius*sin(t),self.radius*cos(t),zeros(t.shape)]).T
 
 class Trace(FadePolyLine):
+  """
+  py:function:: Trace(frame, point='', length=0, **common)
+  This object will plot a trace, a line connecting historical points and fading.
+  
+  Example usage that will plot a helix trace
+  
+  worldframe=WorldFrame()
+  Trace(worldframe,point='[sin(time),cos(time),time]')
+  
+  Special arguments:
+  * length: length of trace in timesteps. Special value 0 to indicate the maximal length
+
+  
+  Look at the documentation of Primitive to see the other 'common' keyword options
+  
+  """
    point=TExpression(NumpyArray)
    length = Int(0)
    
@@ -507,6 +563,21 @@ class Trace(FadePolyLine):
      self.points=expression.get_array(first=-self.length)
 
 class ProjectedPolyLine(Primitive):
+	"""
+	py:function:: ProjectedPolyLine(frame, watch=object, **common)
+	Arguments:
+	  'object' should be a PolyLine instance
+
+	Plot a projection to the ground plane of a given PolyLine.
+	
+	Example usage:
+	
+	ProjectedPolyLine(world,Circle(world,T='TRx(0.5)'))
+	
+	Plots a tilted circle and vertical lines reaching to the ground on each circle discretisation point.
+	
+	Look at the documentation of Primitive to see the other 'common' keyword options
+	"""
 	watch=Instance(PolyLine)
 	watchpoints=DelegatesTo('watch',prefix='points')
 	watchTM=DelegatesTo('watch',prefix='TM')
@@ -552,6 +623,15 @@ class ProjectedPolyLine(Primitive):
      
 
 class Text(Primitive):
+  """
+  py:function:: Text(frame, text='', **common)
+  Plot text in the 3D window
+  
+  Look at @tofillin@ for overlaying 2D text
+
+  
+  Look at the documentation of Primitive to see the other 'common' keyword options
+  """
   text=DelegatesTo('source')
   traits_view = View(
     Item(name = 'frame', label='Frame'),
@@ -569,6 +649,18 @@ class Text(Primitive):
     #kwargs.get('foo', 12)  fnoble cleverity
 
 class Image(Primitive):
+    """
+    py:function:: Image(frame, file='', **common)
+    Plot an image in 3D space.
+    Use T keyword to set the scale
+    
+    Example usage:
+    Image(worldframe, T='sc(5)', file='woodpecker.bmp')
+    
+    Plots a bitmap scaled up 5 times.
+    
+    Look at the documentation of Primitive to see the other 'common' keyword options
+    """
     source=Instance(ImageReader)
     file=DelegatesTo('source',prefix='base_file_name')
     traits_view = View(
@@ -587,6 +679,11 @@ class Image(Primitive):
         self.handle_arguments(*args,**kwargs)
     
 class ImageHeightMap(Primitive):
+    """
+    py:function:: ImageHeightMap(frame, file='', ?)
+
+    This class is not yet implemented
+    """
     source=Instance(ImageReader)
     file=DelegatesTo('source',prefix='base_file_name')
     warper= Instance( tvtk.WarpScalar)
@@ -633,10 +730,9 @@ class PrimitiveCollection(VisualObject):
   def getPrimitives(self):
     return self.primitives
     
-  def __init__(self,frame,T=None,**kwargs):
-    print "initialised with" , frame, T , kwargs
+  def __init__(self,frame,T=eye,**kwargs):
     self.frame=frame
-    VisualObject.__init__(self,frame,T=T,**kwargs)
+    VisualObject.__init__(self,frame,T,**kwargs)
     if not(T is None):
       self.T=T
     self.frame=frame
@@ -675,6 +771,20 @@ class PrimitiveCollection(VisualObject):
 
 
 class Strobe(PrimitiveCollection):
+	"""
+	py:function:: Strobe(object, [length=10, step=1])
+	Arguments:
+	  'object' is a Primitive or PrimitiveCollection instance
+	  'length' is the number of strobed copies
+	  'step' allows to interlace time history; only add a strobed copy every other 'step' frame
+	  
+	Example usage:
+	
+	Strobe(Sphere(world,T='tr(time,0,0)*sc(time)'), length=20)
+	
+	Will displays a trace of 20 spheres moving and growing in size
+	
+	"""
 	length=Int(10)
 	step=Int(1)
 	template=Instance(VisualObject)
@@ -688,6 +798,7 @@ class Strobe(PrimitiveCollection):
 	   )
 	   
 	def __init__(self,template):
+		print template
 		self.template=template
 	
 	def _length_changed(self):
@@ -698,9 +809,9 @@ class Strobe(PrimitiveCollection):
 		
 	def setup(self):
 		if hasattr(self,'scene'):
-			print "setup requested"
 			self.remove_from_scene()
 			for lag in range(0,self.length*self.step,self.step):
+				print self.template
 				cl=Lag(self.template,lag)
 				self.add(cl)
 				cl.add_to_scene(self.scene)
@@ -710,6 +821,26 @@ class Strobe(PrimitiveCollection):
 		self.setup()
 	
 def Lag(shape,lag):
+	"""
+	py:function:: Lag(visualObject, lag)
+	
+	Modifier that adds a delayed clone of a visualObject to the scene.
+	
+	Arguments:
+	  'object' is a Primitive or PrimitiveCollection instance
+	  'lag' is specified in timesteps
+	
+	Example usage:
+	a=Box(world,T='tr(time,0,0)')
+	
+	self.add(a)
+	self.add(Lag(a,10))
+	
+	Plots two moving boxes. One is lagging behind the other by 10 timesteps.
+
+	Look at @tofillin@ for overlaying 2D text
+
+	"""
 	cl=shape.clone()
 	cl.setall('lag',lag)
 	return cl
