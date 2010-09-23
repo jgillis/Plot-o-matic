@@ -120,10 +120,10 @@ class FrameHelperFunctions:
       return norms(x,y,z)
 
   def norms(x,y=None,z=None):
-      if y==None:
-         return x[0]**2+y[1]**2+z[2]**2
+    if y is None:
+        return x[0]**2+x[1]**2+x[2]**2
       else:
-         return x**2+y**2+z**2
+        return x**2+y**2+z**2
     
 from variables import update_context
 
