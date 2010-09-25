@@ -322,19 +322,20 @@ class Point(Sphere):
 		self.radius=0.05
 
 class Arrow(Primitive):
-  """
-  py:function:: Arrow(frame, axis=[1,0,0], **common)
+   """
+   py:function:: Arrow(frame, axis=[1,0,0], **common)
   
-  Plots an arrow in the 3D view
+   Plots an arrow in the 3D view
   
-  Arguments:
-   'axis' determines the direction in which the arrow is pointing
-   'tip_resolution'  defines the resolution of the tip
+   Arguments:
+    'axis' determines the direction in which the arrow is pointing
+    'tip_resolution'  defines the resolution of the tip
    
-  Look at the documentation of Primitive to see the other 'common' keyword options
-  """
+   Look at the documentation of Primitive to see the other 'common' keyword options
+   """
    source=Instance(tvtk.ArrowSource)
    tip_resolution = DelegatesTo("source")
+   shaft_resolution = DelegatesTo("source")
    axis=TExpression(NumpyArray)
    traits_view = View(
     Item(name = 'frame', label='Frame'),
@@ -502,14 +503,14 @@ class FadePolyLine(PolyLine):
     self.source.point_data.scalars=linspace(0,1,self.points.shape[0])
 
 class Circle(PolyLine):
-  """
-  py:function:: Circle(frame, radius=1, resolution=100, **common)
+   """
+   py:function:: Circle(frame, radius=1, resolution=100, **common)
  
-  Plots a circle in the 3D view
+   Plots a circle in the 3D view
    
-  Look at the documentation of Primitive to see the other 'common' keyword options
+   Look at the documentation of Primitive to see the other 'common' keyword options
   
-  """
+   """
    radius=TExpression(Float)
    resolution=Int(100)
    points=Instance(ndarray)
@@ -536,22 +537,22 @@ class Circle(PolyLine):
      	self.points = array([self.radius*sin(t),self.radius*cos(t),zeros(t.shape)]).T
 
 class Trace(FadePolyLine):
-  """
-  py:function:: Trace(frame, point='', length=0, **common)
-  This object will plot a trace, a line connecting historical points and fading.
+   """
+   py:function:: Trace(frame, point='', length=0, **common)
+   This object will plot a trace, a line connecting historical points and fading.
   
-  Example usage that will plot a helix trace
+   Example usage that will plot a helix trace
   
-  worldframe=WorldFrame()
-  Trace(worldframe,point='[sin(time),cos(time),time]')
+   worldframe=WorldFrame()
+   Trace(worldframe,point='[sin(time),cos(time),time]')
   
-  Special arguments:
-  * length: length of trace in timesteps. Special value 0 to indicate the maximal length
+   Special arguments:
+   * length: length of trace in timesteps. Special value 0 to indicate the maximal length
 
   
-  Look at the documentation of Primitive to see the other 'common' keyword options
+   Look at the documentation of Primitive to see the other 'common' keyword options
   
-  """
+   """
    point=TExpression(NumpyArray)
    length = Int(0)
    
