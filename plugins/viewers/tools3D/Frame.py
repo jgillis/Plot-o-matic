@@ -104,33 +104,39 @@ class FrameHelperFunctions:
                 [	2*b*d-2*a*c,		2*c*d+2*a*b,	a*a-b*b-c*c+d*d,0],
                 [	0,			0,		0,		1]])
 
-  def align(x,y,z):
-      v1=normalize(matrix([x,y,z]))
-      if v1[0,0] < 0.5:
-         v2=normalize(cross(v1,e1))
-         v3=normalize(cross(v1,v2))
-      else:
-         v2=normalize(cross(v1,e2))
-         v3=normalize(cross(v1,v2))
-      return vstack((v1,v2,v3)).T
 
-  def normalize(x):
-      return x/(norm(x)+0.0)
-      
-  def norm(x,y=None,z=None):
-      return sqrt(norms(x,y,z))
 
-  def norms(x,y=None,z=None):
+
+from variables import update_context
+
+update_context(FrameHelperFunctions.__dict__)
+
+
+def norms(x,y=None,z=None):
     if isinstance(x,numpy.ndarray) or isinstance(x,matrix):
         return x[0,0]**2+x[0,1]**2+x[0,2]**2
     elif y is None:
         return x[0]**2+x[1]**2+x[2]**2
     else:
         return x**2+y**2+z**2
+
+
+def norm(x,y=None,z=None):
+      return sqrt(norms(x,y,z))
+
+
+def normalize(x):
+      return x/(norm(x)+0.0)
+
+def align(x,y,z):
+      v1=normalize(matrix([x,y,z]))
+      if v1[0,0] < 0.5:
+         v2=normalize(cross(v1,matrix([1,0,0])))
+         v3=normalize(cross(v1,v2))
+      else:
+         v2=normalize(cross(v1,matrix([0,1,0])))
+         v3=normalize(cross(v1,v2))
+      return vstack((vstack((v1,v2,v3,matrix([0,0,0]))).T,matrix([0,0,0,1])))
     
-from variables import update_context
-
-update_context(FrameHelperFunctions.__dict__)
-
-
-
+def sc(s) :
+    return matrix([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1.0/s]])

@@ -112,6 +112,11 @@ class Primitive(VisualObject):
         pre=self.e
       if post is None:
         post=self.e
+      if hasattr(self,'post'):
+        post=self.post
+      if hasattr(self,'pre'):
+        pre=self.pre
+
       HasExpressionTraits.update(self)
       TMt=None
       if hasattr(self,'T'):
@@ -335,6 +340,7 @@ class Arrow(Primitive):
     Item(name = 'frame', label='Frame'),
     Item(name = 'axis',style = 'custom'),
     Item(name = 'tip_resolution'),
+    Item(name = 'shaft_resolution'),
     Item(name = 'source', editor=InstanceEditor(), label = 'Geometric properties'),
     Item(name = 'properties', editor=InstanceEditor(), label = 'Render properties'),
     title = 'Arrow properties'
@@ -346,6 +352,10 @@ class Arrow(Primitive):
     self.actor = tvtk.Actor(mapper=self.mapper)
     self.handle_arguments(*args,**kwargs)
     
+   def _axis_changed(self):
+     if self.axis is None:
+        return
+     self.post=align(self.axis[0],self.axis[1],self.axis[2])*sc(norm(self.axis))
 
 
 class Plane(Primitive):
